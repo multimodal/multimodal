@@ -41,12 +41,21 @@ class COCOBottomUpFeatures:
     """
 
     urls = {
-        "trainval_36": "https://imagecaption.blob.core.windows.net/imagecaption/trainval_36.zip",
+        "trainval2014_36": "https://imagecaption.blob.core.windows.net/imagecaption/trainval_36.zip",  # trainval2014
         "test2015_36": "https://imagecaption.blob.core.windows.net/imagecaption/test2015_36.zip",
         "test2014_36": "https://imagecaption.blob.core.windows.net/imagecaption/test2014_36.zip",
-        "trainval": "https://imagecaption.blob.core.windows.net/imagecaption/trainval.zip",
+        "trainval2014": "https://imagecaption.blob.core.windows.net/imagecaption/trainval.zip",  # trainval2014
         "test2015": "https://imagecaption.blob.core.windows.net/imagecaption/test2015.zip",
         "test2014": "https://imagecaption.blob.core.windows.net/imagecaption/test2014.zip",
+    }
+
+    tsv_paths = {
+        "trainval2014_36": "trainval_36/trainval_resnet101_faster_rcnn_genome_36.tsv",
+        "test2015_36": "test2015_36/test2014_resnet101_faster_rcnn_genome_36.tsv",
+        "test2014_36": "test2014_36/test2014_resnet101_faster_rcnn_genome_36.tsv",
+        "trainval2014": "trainval/trainval_resnet101_faster_rcnn_genome.tsv",
+        "test2015": "test2015/test2014_resnet101_faster_rcnn_genome.tsv",
+        "test2014": "test2014/test2014_resnet101_faster_rcnn_genome.tsv",
     }
 
     def __init__(self, dir_cache="/tmp", features="test2014_36"):
@@ -82,15 +91,12 @@ class COCOBottomUpFeatures:
 
     def process_file(self, path_infile, outfile):
         directory = os.path.dirname(path_infile)
+        tsv_path = self.tsv_paths[self.features_name]
         try:
-            tsv_paths = glob.glob(os.path.join(self.dir_cache, self.features_name, "*"))
-            if len(tsv_paths) == 0:
+            if not os.path.exists(tsv_path):
                 print(f"Unzipping file at {path_infile}")
                 with zipfile.ZipFile(path_infile, "r") as zip_ref:
                     zip_ref.extractall(directory)
-            tsv_path = glob.glob(os.path.join(self.dir_cache, self.features_name, "*"))[
-                0
-            ]
             names = set()
             num_duplicates = 0
             print(f"Processing file {tsv_path}")
@@ -104,12 +110,10 @@ class COCOBottomUpFeatures:
                     tsv_in_file, delimiter="\t", fieldnames=FIELDNAMES
                 )
                 for item in tqdm(reader):
-                    # print(item["image_id"])
                     item["image_id"] = int(item["image_id"])
                     item["image_h"] = int(item["image_h"])
                     item["image_w"] = int(item["image_w"])
                     item["num_boxes"] = int(item["num_boxes"])
-                    # breakpoint()
                     if item["image_id"] in names:
                         print(f"Duplicate {item['image_id']}")
                         num_duplicates += 1
@@ -123,7 +127,6 @@ class COCOBottomUpFeatures:
                     with outzip.open(str(item["image_id"]), "w") as itemfile:
                         pickle.dump(item, itemfile)
             print(f"Num duplicates : {num_duplicates}")
-
             outzip.close()
         except Exception:
             outzip.close()

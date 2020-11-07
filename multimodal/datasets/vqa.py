@@ -13,10 +13,6 @@ import json
 from multimodal.features import get_features
 
 
-def collate_vqa(batch):
-    pass
-
-
 class VQA(Dataset):
 
     name = "vqa"
@@ -37,11 +33,11 @@ class VQA(Dataset):
         features=None,
         dir_features=None,
         split="train",
-        tokenization=True,
+        tokenization=None,
     ):
         """
         dir_download: dir for the multimodal.pytorch cache (data will be downloaded in a vqa2/ folder inside this directory
-        features: which visual features should be used. Choices: bottomup or bottomup_36
+        features: which visual features should be used. Choices: coco-bottomup or coco-bottomup-36
         dir_features: if None, default to dir_download.
         split: in [train, val, test]
         """
@@ -54,7 +50,6 @@ class VQA(Dataset):
         self.tokenization = tokenization
         if tokenization:
             import sentencepiece as spm
-
             self.tokenizer = spm.SentencePieceProcessor()
 
         # load questions
@@ -66,11 +61,11 @@ class VQA(Dataset):
     def load_features(self):
         if self.split == "test":
             self.feats = get_features(
-                self.features, split="test2014", dir_cache=self.dir_features,
+                self.features, split="test2015", dir_cache=self.dir_features,
             )
         else:
             self.feats = get_features(
-                self.features, split="trainval", dir_cache=self.dir_features
+                self.features, split="trainval2014", dir_cache=self.dir_features
             )
 
     def path_questions(self):
