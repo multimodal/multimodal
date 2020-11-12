@@ -155,11 +155,12 @@ class VQA(Dataset):
             print(f"Downloading questions at {url_questions} to {download_path}")
             urllib.request.urlretrieve(url_questions, download_path)
             urllib.request.urlretrieve(url_questions, download_path)
-        url_annotations = self.url_annotations[self.split]
-        download_path = self.path_original_annotations
-        if not os.path.exists(download_path):
-            print(f"Downloading annotations {url_annotations} to {download_path}")
-            urllib.request.urlretrieve(url_annotations, download_path)
+        url_annotations = self.url_annotations.get(self.split, None)
+        if url_annotations is not None:  # No annotations for test
+            download_path = self.path_original_annotations
+            if not os.path.exists(download_path):
+                print(f"Downloading annotations {url_annotations} to {download_path}")
+                urllib.request.urlretrieve(url_annotations, download_path)
 
     def __len__(self):
         return len(self.questions)
