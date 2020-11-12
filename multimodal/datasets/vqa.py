@@ -239,12 +239,17 @@ class VQACP(VQA):
             dir_cache=self.dir_features,
         )
 
+    def load_original_annotations(self):
+        print("Loading annotations")
+        with open(self.path_original_annotations) as f:
+            self.annotations = json.load(f)
+
     def load(self):
         print("Loading questions")
         with open(self.path_questions) as f:
-            self.questions = json.load(f)["questions"]
+            self.questions = json.load(f)
 
-        print("Loading annotations")
+        print("Loading processed annotations")
         with open(self.path_annotations_processed) as f:
             self.annotations = json.load(f)
 
