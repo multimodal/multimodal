@@ -68,24 +68,30 @@ class VQA(Dataset):
         self.path_questions = os.path.join(self.dir_dataset, filename)
 
         # path download annotations
-        filename = os.path.basename(self.url_annotations[self.split])
-        self.path_original_annotations = os.path.join(self.dir_dataset, filename)
+        if self.split in self.url_annotations:
+            filename = os.path.basename(self.url_annotations[self.split])
+            self.path_original_annotations = os.path.join(self.dir_dataset, filename)
 
-        # processed annotations contain answer_token and answer scores
-        self.processed_dir = os.path.join(self.dir_dataset, "processed")
-        os.makedirs(self.processed_dir, exist_ok=True)
-        self.path_annotations_processed = os.path.join(
-            self.processed_dir, "annotations.json"
-        )
+            # processed annotations contain answer_token and answer scores
+            self.processed_dir = os.path.join(self.dir_dataset, "processed")
+            os.makedirs(self.processed_dir, exist_ok=True)
+            self.path_annotations_processed = os.path.join(
+                self.processed_dir, "annotations.json"
+            )
+
         self.download()
-        self.process()
+
+        if self.split in self.url_annotations:
+            self.process_annotations()
+
         if self.features is not None:
             self.load_features()
 
         self.load()  # load questions and annotations
 
-        # This dictionnary will be used for evaluation
-        self.qid_to_annot = {a["question_id"]: a for a in self.annotations}
+        if self.split in self.url_annotations:
+            # This dictionnary will be used for evaluation
+            self.qid_to_annot = {a["question_id"]: a for a in self.annotations}
 
     def load_features(self):
         if self.split == "test":
@@ -99,9 +105,10 @@ class VQA(Dataset):
                 self.features, split="trainval2014", dir_cache=self.dir_features
             )
 
-    def process(self):
-        """Process answers to create answer tokens, and prepare score computation.
-        This follows the official VQA evaluation score.
+    def process_annotations(self):
+        """Process answers to create answer tokens,
+        and precompute VQA score for faster evaluation.
+        This follows the official VQA evaluation tool.
         """
         if os.path.exists(self.path_annotations_processed):
             return
@@ -144,8 +151,9 @@ class VQA(Dataset):
                 self.questions = json.load(f)["questions"]
 
         print("Loading annotations")
-        with open(self.path_annotations_processed) as f:
-            self.annotations = json.load(f)
+        if self.split in self.url_annotations:
+            with open(self.path_annotations_processed) as f:
+                self.annotations = json.load(f)
 
     def download(self):
         os.makedirs(os.path.join(self.dir_download, self.name), exist_ok=True)
@@ -155,8 +163,9 @@ class VQA(Dataset):
             print(f"Downloading questions at {url_questions} to {download_path}")
             urllib.request.urlretrieve(url_questions, download_path)
             urllib.request.urlretrieve(url_questions, download_path)
-        url_annotations = self.url_annotations.get(self.split, None)
-        if url_annotations is not None:  # No annotations for test
+
+        if self.split in self.url_annotations:  # No annotations for test
+            url_annotations = self.url_annotations[self.split]
             download_path = self.path_original_annotations
             if not os.path.exists(download_path):
                 print(f"Downloading annotations {url_annotations} to {download_path}")
@@ -168,8 +177,9 @@ class VQA(Dataset):
     def __getitem__(self, index):
         data = {
             "question": self.questions[index],
-            "annotation": self.annotations[index],
         }
+        if self.split in self.url_annotations:
+            data["annotation"] = self.annotations[index]
 
         if self.features is not None:
             image_id = data["question"]["image_id"]
