@@ -11,7 +11,10 @@ def test_datasets():
             print(val[0])
             test = dataset(dir_download=d, split="test", top_answers=3000)
             print(test[0])
-        for dataset in [VQACP, VQACP2]:
+
+def test_datasets_cp():
+    with tempfile.TemporaryDirectory() as d:
+        for dataset in [VQACP2]:
             train = dataset(dir_download=d, split="train", top_answers=3000)
             print(train[0])
             test = dataset(dir_download=d, split="test", top_answers=3000)
