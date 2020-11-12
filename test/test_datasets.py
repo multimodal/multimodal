@@ -2,15 +2,20 @@ from multimodal.datasets import VQA, VQA2, VQACP, VQACP2
 import tempfile
 
 
-def test_vqa():
+def test_datasets():
     with tempfile.TemporaryDirectory() as d:
-        vqa_train = VQA(dir_download=d, split="train", top_answers=3000)
-        print(vqa_train[0])
-        vqa_val = VQA(dir_download=d, split="val", top_answers=3000)
-        print(vqa_val[0])
-        vqa_test = VQA(dir_download=d, split="test", top_answers=3000)
-        print(vqa_test[0])
-
+        for dataset in [VQA, VQA2]:
+            train = dataset(dir_download=d, split="train", top_answers=3000)
+            print(train[0])
+            val = dataset(dir_download=d, split="val", top_answers=3000)
+            print(val[0])
+            test = dataset(dir_download=d, split="test", top_answers=3000)
+            print(test[0])
+        for dataset in [VQACP, VQACP2]:
+            train = dataset(dir_download=d, split="train", top_answers=3000)
+            print(train[0])
+            test = dataset(dir_download=d, split="test", top_answers=3000)
+            print(test[0])
 
 def test_vqa_eval():
     with tempfile.TemporaryDirectory() as d:
