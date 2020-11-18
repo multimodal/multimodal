@@ -29,6 +29,28 @@ Available features are:
 from multimodal.features import COCOBottomUpFeatures
 ```
 
+### Word embeddings
+
+Word embeddings are implemented as pytorch modules. Thus, they are trainable if needed, but can be freezed.
+
+The following pretrained embeddings are available: 
+    charngram.100d, fasttext.en.300d, fasttext.simple.300d, glove.42B.300d, glove.6B.100d, glove.6B.200d, glove.6B.300d, glove.6B.50d, glove.840B.300d, glove.twitter.27B.100d, glove.twitter.27B.200d, glove.twitter.27B.25d, glove.twitter.27B.50d
+
+Usage
+```python
+from multimodal.text import WordEmbedding
+
+# Pretrained word embedding, freezed.
+wemb = WordEmbedding.from_pretrained("glove.840B.300d", freeze=True)
+
+# Word embedding from scratch, and trainable.
+wemb = Wordembedding(tokens, dim=50, freeze=False)
+
+
+embeddings = wemb(["Inputs are batched, and padded. This is the first batch item", "This is the second batch item."])
+
+
+```
 ## Example
 
 
