@@ -9,6 +9,7 @@ REQUIRED_PKGS = [
     "appdirs",
     "torch>=1",
     "pySmartDL",
+    "torchtext",
 ]
 
 
