@@ -1,1 +1,2 @@
 import multimodal.datasets
+import multimodal.text
