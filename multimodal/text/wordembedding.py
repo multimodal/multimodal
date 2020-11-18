@@ -3,7 +3,6 @@ from torchtext.vocab import pretrained_aliases
 import torch.nn as nn
 import torch
 import functools
-import spacy
 from torchtext.data.utils import get_tokenizer
 
 """
