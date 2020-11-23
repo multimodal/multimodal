@@ -139,3 +139,7 @@ cython_debug/
 
 # sublime
 *.sublime-project
+
+
+# ide
+.vscode
