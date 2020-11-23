@@ -1,9 +1,8 @@
-import torchtext
 from torchtext.vocab import pretrained_aliases
+from torchtext.data.utils import get_tokenizer
 import torch.nn as nn
 import torch
-import functools
-from torchtext.data.utils import get_tokenizer
+
 
 """
 https://www.reddit.com/r/MachineLearning/comments/axkmi0/d_why_is_code_or_libraries_for_wordpiece/
@@ -39,7 +38,7 @@ class WordEmbedding(nn.Module):
         self.embedding = nn.Embedding(len(self.tokens), dim, padding_idx=0)
 
         if freeze:
-            self.embeddings.weights.requires_grad = False
+            self.embedding.weight.requires_grad = False
 
         self.stats = {"unknown": 0, "total": 0, "unk_words": set()}
         self.compute_stats = compute_stats
@@ -59,7 +58,12 @@ class WordEmbedding(nn.Module):
         cache: str = None,
     ):
         """
-        tokens: specify list of tokens to be used. If `None`, load all tokens from word embedding (with `max_tokens`)
+        name: One of [charngram.100d, fasttext.en.300d, fasttext.simple.300d, 
+            glove.42B.300d, glove.6B.100d, glove.6B.200d, glove.6B.300d, glove.6B.50d, 
+            glove.840B.300d, glove.twitter.27B.100d, glove.twitter.27B.200d, 
+            glove.twitter.27B.25d, glove.twitter.27B.50d]
+        tokens: specify list of tokens to be used. If `None`, 
+            load all tokens from word embedding (with `max_tokens`)
         max_tokens: if `tokens` is None, this*
         cache: path where word embeddings will be downloaded.
         """
@@ -69,18 +73,17 @@ class WordEmbedding(nn.Module):
         )
         if tokens is None:
             tokens = vocab.itos
-        embedding = cls(tokens, dim=dim)
+        embedding = cls(tokens, dim=dim, freeze=freeze)
         for token in embedding.tokens:
-            id = embedding.tokens_to_id[token]
+            token_id = embedding.tokens_to_id[token]
             if token not in vocab.itos:
                 print(f"Missing token : {token}")
-            embedding.embedding.weight.data[id] = vocab[token]
+            embedding.embedding.weight.data[token_id] = vocab[token]
         return embedding
 
     def filter_and_pad(self, sentences):
         max_lengths = max(len(sent) for sent in sentences)
         filtered_sentences = []
-
         # Filter unknown tokens
         for sent in sentences:
             filtered_sent = []
@@ -114,11 +117,11 @@ class WordEmbedding(nn.Module):
         ).to(device=self.embedding.weight.device)
         return self.embedding(token_ids)
 
-    def state_dict(self):
+    def state_dict(self, *args, **kwargs):
         """
         Save token list with the word embedding.
         """
-        state_dict = super().state_dict()
+        state_dict = super().state_dict(*args, **kwargs)
         state_dict["tokens"] = self.tokens
         return state_dict
 
