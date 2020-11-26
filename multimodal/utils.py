@@ -2,6 +2,10 @@ from pySmartDL import SmartDL
 import os
 from shutil import unpack_archive
 
+def get_basename(url):
+    return url.split("/")[-1]
+
+
 def download_file(url, directory, filename=None):
     os.makedirs(directory, exist_ok=True)
     path = directory
