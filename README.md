@@ -114,3 +114,30 @@ The `item` will contain the following keys :
 
 #### Word embeddings
 
+```python
+# Word embedding from scratch, and trainable.
+wemb = Wordembedding(
+    tokens,   # Token list. We recommend using torchtext basic_english tokenizer.
+    dim=50,   # Dimension for word embeddings.
+    freeze=False   # freeze=True means that word embeddings will be set with `requires_grad=False`. 
+)
+
+
+
+wemb = WordEmbedding.from_pretrained(
+    name="glove.840B.300d", # embedding name (from torchtext)
+    tokens,                 # tokens to load from the word embedding.
+    max_tokens=None,        # if set to N, only the N most common tokens will be loaded.
+    freeze=True,            # same parameter as default model. 
+    dir_data=None,          # dir where data will be downloaded. Default is multimodal directory in apps dir.
+)
+
+# Forward pass
+sentences = ["How many people are in the picture?", "What color is the car?"]
+wemb(
+    sentences, 
+    tokenized=False  # set tokenized to True if sentence is already tokenized.
+)
+
+```
+

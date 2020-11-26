@@ -2,6 +2,7 @@
 Vision features for muldimodal tasks like Image Captioning, VQA or image retrieval
 """
 # std
+from multimodal import DEFAULT_DATA_DIR
 import os
 import zipfile
 import csv
@@ -47,9 +48,10 @@ class COCOBottomUpFeatures:
         "test2014": "test2014/test2014_resnet101_faster_rcnn_genome.tsv",
     }
 
-    def __init__(self, features, dir_data):
+    def __init__(self, features, dir_data=None):
         self.features_name = features
         self.featsfile = None  # Lazy loading of zipfile
+        dir_data = dir_data or DEFAULT_DATA_DIR
         self.dir_data = os.path.join(dir_data, "features", self.name)
         os.makedirs(self.dir_data, exist_ok=True)
         self.featspath = os.path.join(self.dir_data, features + ".zipfeat")

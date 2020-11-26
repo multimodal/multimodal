@@ -1,6 +1,3 @@
-from genericpath import exists
-
-from numpy.lib.arraysetops import isin
 from multimodal.features.bottomup import COCOBottomUpFeatures
 import tempfile
 import shutil

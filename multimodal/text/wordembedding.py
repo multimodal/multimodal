@@ -1,7 +1,10 @@
-from torchtext.vocab import pretrained_aliases
-from torchtext.data.utils import get_tokenizer
+import os
 import torch.nn as nn
 import torch
+from torchtext.data.utils import get_tokenizer
+from torchtext.vocab import pretrained_aliases
+
+from multimodal import DEFAULT_DATA_DIR
 
 
 """
@@ -17,14 +20,13 @@ class WordEmbedding(nn.Module):
     """
 
     def __init__(
-        self, tokens: list, dim: int, unk_init=None, freeze=False, compute_stats=False,
+        self, tokens: list, dim: int, freeze=False, compute_stats=False,
     ):
         """
         Arguments:
             name: name of Vectors in torchtext.vocab.Vectors.
                 Can be
             tokens: list of strings containing all the tokens in the vocabulary
-            unk_init: function to pass to torchtext.Vocab
             compute_stats: Total number of tokens and total number of unknown tokens processed will be saved in the
                 ```self.stats['unknown']``` and ```self.stats['total']``` attribute
         """
@@ -34,7 +36,6 @@ class WordEmbedding(nn.Module):
         self.tokens = ["<pad>", "<unk>"] + tokens  # padding and unknown token
         self.tokens_to_id = {token: i for i, token in enumerate(self.tokens)}
         self.vocab = None  # lazy loading
-        self.unk_init = unk_init
         self.embedding = nn.Embedding(len(self.tokens), dim, padding_idx=0)
 
         if freeze:
@@ -55,7 +56,7 @@ class WordEmbedding(nn.Module):
         freeze=True,
         max_tokens: int = None,
         unk_init=None,
-        cache: str = None,
+        dir_data: str = None,
     ):
         """
         name: One of [charngram.100d, fasttext.en.300d, fasttext.simple.300d, 
@@ -67,6 +68,8 @@ class WordEmbedding(nn.Module):
         max_tokens: if `tokens` is None, this*
         cache: path where word embeddings will be downloaded.
         """
+        dir_data = dir_data or DEFAULT_DATA_DIR
+        cache = os.path.join(dir_data, "word-embeddings")
         dim = int(pretrained_aliases[name].keywords["dim"])
         vocab = pretrained_aliases[name](
             cache=cache, unk_init=unk_init, max_vectors=max_tokens,
@@ -104,12 +107,13 @@ class WordEmbedding(nn.Module):
         ]
         return sentences
 
-    def forward(self, sentences):
+    def forward(self, sentences, tokenized=False):
         """
         Arguments:
             sentences: list of sentences (batch)
         """
-        sentences = [self.tokenizer(sentence) for sentence in sentences]
+        if not tokenized:
+            sentences = [self.tokenizer(sentence) for sentence in sentences]
         sentences = self.filter_and_pad(sentences)
         # torch.max()
         token_ids = torch.LongTensor(
