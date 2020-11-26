@@ -64,7 +64,7 @@ class COCOBottomUpFeatures:
         url = self.urls[self.features_name]
         dl = SmartDL(url, self.dir_data)
         destination = dl.get_dest()
-        if not exists(dl.get_dest()):
+        if not os.path.exists(dl.get_dest()):
             dl.start()
         return destination
 
