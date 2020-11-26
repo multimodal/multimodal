@@ -13,17 +13,13 @@ import sys
 from tqdm import tqdm
 import shutil
 import numpy as np
+from pySmartDL import SmartDL
 
 # multimodal
 from multimodal.utils import download_file
 
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["image_id", "image_w", "image_h", "num_boxes", "boxes", "features"]
-
-
-def get_basename(url):
-    return url.split("/")[-1]
-
 
 
 class COCOBottomUpFeatures:
@@ -51,7 +47,7 @@ class COCOBottomUpFeatures:
         "test2014": "test2014/test2014_resnet101_faster_rcnn_genome.tsv",
     }
 
-    def __init__(self, features="test2014_36", dir_data=None):
+    def __init__(self, features, dir_data):
         self.features_name = features
         self.featsfile = None  # Lazy loading of zipfile
         self.dir_data = os.path.join(dir_data, "features", self.name)
@@ -60,10 +56,17 @@ class COCOBottomUpFeatures:
 
         # processing
         if not os.path.exists(self.featspath):
-            url = self.urls[features]
-            path_download = download_file(url, self.dir_data)
+            path_download = self.download()
             print("Processing file")
             self.process_file(path_download, self.featspath)
+
+    def download(self):
+        url = self.urls[self.features_name]
+        dl = SmartDL(url, self.dir_data)
+        destination = dl.get_dest()
+        if not exists(dl.get_dest()):
+            dl.start()
+        return destination
 
     def __getitem__(self, image_id: str):
         self.check_open()
@@ -79,7 +82,7 @@ class COCOBottomUpFeatures:
 
     def process_file(self, path_infile, outfile):
         directory = os.path.dirname(path_infile)
-        tsv_path = self.tsv_paths[self.features_name]
+        tsv_path = os.path.join(directory, self.tsv_paths[self.features_name])
         try:
             if not os.path.exists(tsv_path):
                 print(f"Unzipping file at {path_infile}")
@@ -108,7 +111,7 @@ class COCOBottomUpFeatures:
                         continue
                     for field in ["boxes", "features"]:
                         item[field] = np.frombuffer(
-                            base64.decodestring(item[field].encode("ascii")),
+                            base64.decodebytes(item[field].encode("ascii")),
                             dtype=np.float32,
                         ).reshape((item["num_boxes"], -1))
                     names.add(item["image_id"])
@@ -122,4 +125,4 @@ class COCOBottomUpFeatures:
             raise
         # remove tsv
         print("Deleting tsv from disk")
-        shutil.rmtree(os.path.join(self.dir_data, self.features_name))
+        os.remove(tsv_path)
