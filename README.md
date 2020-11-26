@@ -21,7 +21,7 @@ Available features are COCOBottomUpFeatures
 
 ```python
 >>> from multimodal.features import COCOBottomUpFeatures
->>> bottomup = COCOBottomUpFeatures(dir_cache="/tmp", features="trainval_36", dir_cache="/tmp")
+>>> bottomup = COCOBottomUpFeatures(features="trainval_36", dir_data="/tmp")
 >>> image_id = 13455
 >>> feats = bottomup[image_id]
 >>> print(feats.keys())
@@ -71,6 +71,15 @@ embeddings = wemb(["Inputs are batched, and padded. This is the first batch item
 
 ### API 
 
+#### Features
+
+```python
+COCOBottomUpFeatures(
+    features="test2014_36",   # one of [trainval2014, trainval2014_36, test2014, test2014_36, test2015, test2015_36]
+    dir_data=None             # directory for multimodal data. By default, in the application directory for multimodal.
+)
+```
+
 #### Datasets
 ```python
 # Datasets
@@ -101,10 +110,7 @@ The `item` will contain the following keys :
 }
 ```
 
-#### Features
 
-```python
-COCOBottomUpFeatures(
-    features="test2014_36",   # one of [trainval2014, trainval2014_36, test2014, test2014_36, test2015, test2015_36]
-    dir_data=None             # directory for multimodal data.
-)
+
+#### Word embeddings
+
