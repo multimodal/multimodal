@@ -3,8 +3,8 @@
 A collection of multimodal (vision and language) datasets and visual features for deep learning research.
 
 Currently it supports the following visual features (downloaded automatically): 
-- COCO Bottom-Up Top-Down features (10-100)
-- COCO Bottom-Up Top-Down features (36)
+- COCO [Bottom-Up Top-Down](https://github.com/peteanderson80/bottom-up-attention) features (10-100)
+- COCO [Bottom-Up Top-Down](https://github.com/peteanderson80/bottom-up-attention) features (36)
 
 It also supports the following datasets, with their evaluation metric ([VQA evaluation metric](https://visualqa.org/evaluation.html)) 
 - VQA v1
