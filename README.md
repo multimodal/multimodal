@@ -77,10 +77,27 @@ embeddings = wemb(["Inputs are batched, and padded. This is the first batch item
 #### Features
 
 ```python
-COCOBottomUpFeatures(
+features = COCOBottomUpFeatures(
     features="test2014_36",   # one of [trainval2014, trainval2014_36, test2014, test2014_36, test2015, test2015_36]
     dir_data=None             # directory for multimodal data. By default, in the application directory for multimodal.
 )
+```
+
+Then, to get the features for a specific image: 
+```python
+feats = features[image_id]
+```
+
+The features have the following keys : 
+```python
+{
+    "image_id": int,
+    "image_w": int,
+    "image_h" : int,
+    "num_boxes": int
+    "boxes": np.array(N, 4),
+    "features": np.array(N, 2048),
+}
 ```
 
 #### Datasets
