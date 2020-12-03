@@ -2,15 +2,16 @@
 
 A collection of multimodal (vision and language) datasets and visual features for deep learning research.
 
+Currently it supports the following visual features (downloaded automatically): 
+- COCO Bottom-Up Top-Down features (10-100)
+- COCO Bottom-Up Top-Down features (36)
+
 Currently it supports the following datasets, with their evaluation metric ([VQA evaluation metric](https://visualqa.org/evaluation.html)) 
 - VQA v1
 - VQA v2
 - VQA-CP v1
 - VQA-CP v2
 
-And the following features: 
-- COCO Bottom-Up Top-Down features (10-100)
-- COCO Bottom-Up Top-Down features (36)
 
 And also word embeddings (either from scratch, or pretrained from torchtext, that can be fine-tuned).
 
