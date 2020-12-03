@@ -12,7 +12,7 @@ And the following features:
 - COCO Bottom-Up Top-Down features (10-100)
 - COCO Bottom-Up Top-Down features (36)
 
-And also trained word embeddings. 
+And also word embeddings (either from scratch, or pretrained from torchtext, that can be fine-tuned).
 
 
 ## Simple Usage
