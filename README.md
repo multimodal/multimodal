@@ -6,7 +6,7 @@ Currently it supports the following visual features (downloaded automatically):
 - COCO Bottom-Up Top-Down features (10-100)
 - COCO Bottom-Up Top-Down features (36)
 
-Currently it supports the following datasets, with their evaluation metric ([VQA evaluation metric](https://visualqa.org/evaluation.html)) 
+It also supports the following datasets, with their evaluation metric ([VQA evaluation metric](https://visualqa.org/evaluation.html)) 
 - VQA v1
 - VQA v2
 - VQA-CP v1
