@@ -1,15 +1,18 @@
 # training a simple baseline on VQA V2
+from statistics import mean
+from pytorch_lightning import callbacks
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
-
-import pytorch_lightning as pl
-from multimodal.datasets import VQA2
-from multimodal.text import WordEmbedding
-from statistics import mean
 from torch.nn.utils.weight_norm import weight_norm
 
+import pytorch_lightning as pl
+from pytorch_lightning.callbacks.early_stopping import EarlyStopping
+
+from multimodal.datasets import VQA2
+from multimodal.text import WordEmbedding
 
 class QuestionEmbedding(nn.Module):
     def __init__(self, in_dim, num_hid, nlayers, dropout):
@@ -96,7 +99,7 @@ class Attention(nn.Module):
 
 
 class SimpleVQAModel(pl.LightningModule):
-    def __init__(self, answers, train_dataset=None, val_dataset=None):
+    def __init__(self, answers, train_dataset=None, val_dataset=None, dir_data=None):
         super().__init__()
 
         self.answers = answers
@@ -104,7 +107,7 @@ class SimpleVQAModel(pl.LightningModule):
         self.val_dataset = val_dataset
 
         self.wemb = WordEmbedding.from_pretrained(
-            "glove.6B.100d", freeze=True, max_tokens=3000
+            "glove.6B.100d", freeze=True, max_tokens=3000, dir_data=dir_data
         )
 
         dim_v = 2048
@@ -224,20 +227,28 @@ if __name__ == "__main__":
         split="train",
         features="coco-bottom-up-36",
         dir_data=args.dir_data,
-        min_ans_occ=10,
+        min_ans_occ=9,
     )
 
     vqa_val = VQA2(
         split="val",
         features="coco-bottom-up-36",
         dir_data=args.dir_data,
-        min_ans_occ=10,
+        min_ans_occ=9,
     )
 
     model = SimpleVQAModel(
-        answers=vqa_train.answers, train_dataset=vqa_train, val_dataset=vqa_val
+        answers=vqa_train.answers,
+        train_dataset=vqa_train,
+        val_dataset=vqa_val,
+        dir_data=args.dir_data,
     )
-    trainer = pl.Trainer(gpus=1, default_root_dir=args.root_dir,)
+    trainer = pl.Trainer(
+        gpus=1,
+        default_root_dir=args.root_dir,
+        max_epochs=50,
+        callbacks=[EarlyStopping(monitor="Accuracy/val_acc_overall")],
+    )
 
     trainer.fit(
         model,

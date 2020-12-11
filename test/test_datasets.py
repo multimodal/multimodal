@@ -16,3 +16,9 @@ def test_datasets():
             {"question_id": qid, "answer": "yes"} for qid in val.qid_to_annot
         ]
         print(val.evaluate(predicted_answers))
+
+
+def test_min_ans_occ():
+    with tempfile.TemporaryDirectory() as d:
+        train = VQA2(dir_data=d, split="train", min_ans_occ=8)
+        print(len(train.answers))
