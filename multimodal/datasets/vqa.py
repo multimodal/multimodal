@@ -1,4 +1,5 @@
 # stdlib
+from multimodal.datasets.vqa_utils import EvalAIAnswerProcessor
 import os
 import urllib
 import zipfile
@@ -19,9 +20,12 @@ import torch
 from multimodal.features import get_features
 from multimodal.datasets import vqa_utils
 from multimodal import DEFAULT_DATA_DIR
+from multimodal.utils import download_and_unzip
 
 
 class VQA(Dataset):
+
+    SPLITS = ["train", "val", "test", "test-dev"]
 
     name = "vqa"
 
@@ -30,12 +34,21 @@ class VQA(Dataset):
         "val": "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/Questions_Val_mscoco.zip",
         "test": "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/Questions_Test_mscoco.zip",
     }
-    filename_questions = {
-        "train": "v2_OpenEnded_mscoco_train2014_questions.json",
-    }
     url_annotations = {
         "train": "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/Annotations_Train_mscoco.zip",
         "val": "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/Annotations_Val_mscoco.zip",
+    }
+
+    filename_questions = {
+        "train": "OpenEnded_mscoco_train2014_questions.json",
+        "val": "OpenEnded_mscoco_val2014_questions.json",
+        "test": "OpenEnded_mscoco_test2015_questions.json",
+        "test-dev": "OpenEnded_mscoco_test-dev2015_questions.json",
+    }
+
+    filename_annotations = {
+        "train": "mscoco_train2014_annotations.json",
+        "val": "mscoco_val2014_annotations.json",
     }
 
     def __init__(
@@ -63,34 +76,56 @@ class VQA(Dataset):
         self.features = features
         self.dir_features = dir_features or os.path.join(self.dir_data)
         self.label = label
+        self.min_ans_occ = min_ans_occ
 
         # Test split has no annotations.
         self.has_annotations = self.split in self.url_annotations
 
-        self.dir_dataset = os.path.join(self.dir_data, self.name, self.split)
-        os.makedirs(self.dir_dataset, exist_ok=True)
+        self.dir_dataset = os.path.join(self.dir_data, "datasets", self.name)
+
+        self.dir_splits = {
+            split: os.path.join(self.dir_dataset, split)
+            for split in self.filename_questions.keys()
+        }
+
+        self.dir_splits["test-dev"] = "test"  # same directory
+
+        for s in self.dir_splits:
+            os.makedirs(self.dir_splits[s], exist_ok=True)
 
         # path download question
-        filename = os.path.basename(self.url_questions[self.split])
-        self.path_questions = os.path.join(self.dir_dataset, filename)
+        self.path_questions = {
+            split: os.path.join(self.dir_splits[split], self.filename_questions[split])
+            for split in self.filename_questions.keys()
+        }
 
         # path download annotations
-        if self.has_annotations:
-            filename = os.path.basename(self.url_annotations[self.split])
-            self.path_original_annotations = os.path.join(
-                self.dir_dataset, filename)
-
-            # processed annotations contain answer_token and answer scores
-            self.processed_dir = os.path.join(self.dir_dataset, "processed")
-            os.makedirs(self.processed_dir, exist_ok=True)
-            self.path_annotations_processed = os.path.join(
-                self.processed_dir, "annotations.json"
+        self.path_original_annotations = {
+            split: os.path.join(
+                self.dir_splits[split], self.filename_annotations[split]
             )
+            for split in self.filename_annotations.keys()
+        }
+
+        # processed annotations contain answer_token and answer scores
+        self.processed_dirs = {
+            split: os.path.join(self.dir_splits[split], "processed")
+            for split in self.filename_annotations.keys()
+        }
+
+        self.path_annotations_processed = {
+            split: os.path.join(self.processed_dirs[split], "annotations.json")
+            for split in self.processed_dirs
+        }
+        for k, d in self.processed_dirs.items():
+            os.makedirs(d, exist_ok=True)
+
+        self.path_answers = os.path.join(
+            self.dir_dataset, f"aid_to_ans-{self.min_ans_occ}.json"
+        )
 
         self.download()
-
-        if self.has_annotations:
-            self.process_annotations()
+        self.process_annotations()
 
         if self.features is not None:
             self.load_features()
@@ -100,38 +135,30 @@ class VQA(Dataset):
         if self.has_annotations:
             # This dictionnary will be used for evaluation
             self.qid_to_annot = {a["question_id"]: a for a in self.annotations}
-
+        
         # aid_to_ans
-        self.path_answers = os.path.join(
-            self.dir_data, self.name, f"aid_to_ans-{min_ans_occ}.json")
-        if not os.path.exists(self.path_answers):
-            if self.split == "train":
-                occ = Counter(
-                    ans for annot in self.annotations for ans in set(annot["scores"]))
-                self.answers = [ans for ans in occ if occ[ans] >= min_ans_occ]
-                print(
-                    f"Num answers after keeping occ >= {min_ans_occ}: {len(self.answers)}.")
-                with open(self.path_answers, "w") as f:
-                    json.dump(self.answers, f)
-            else:
-                raise RuntimeError(
-                    "Train split must be loaded first to create answers list"
-                )
-        else:
-            print(f"Loading aid_to_ans")
-            with open(self.path_answers) as f:
-                self.answers = json.load(f)
-
         self.ans_to_aid = {ans: i for i, ans in enumerate(self.answers)}
+
+    def load_questions(self, split):
+        with open(self.path_questions[split]) as f:
+            return json.load(f)["questions"]
+
+    def load_original_annotations(self, split):
+        with open(self.path_original_annotations[split]) as f:
+            return json.load(f)["annotations"]
+
+    def load_processed_annotations(self, split):
+        with open(self.path_annotations_processed[split]) as f:
+            return json.load(f)
 
     def load_features(self):
         if self.split == "test":
             self.feats = get_features(
-                self.features, split="test2015", dir_cache=self.dir_features,
+                self.features, split="test2015", dir_data=self.dir_features,
             )
         else:
             self.feats = get_features(
-                self.features, split="trainval2014", dir_cache=self.dir_features
+                self.features, split="trainval2014", dir_data=self.dir_features
             )
 
     def process_annotations(self):
@@ -139,71 +166,94 @@ class VQA(Dataset):
         and precompute VQA score for faster evaluation.
         This follows the official VQA evaluation tool.
         """
-        if os.path.exists(self.path_annotations_processed):
-            return
+        path_train = self.path_annotations_processed["train"]
+        path_val = self.path_annotations_processed["val"]
+        if not os.path.exists(path_train) or not os.path.exists(path_val):
+            annotations_train = self.load_original_annotations("train")
+            annotations_val = self.load_original_annotations("val")
+            all_annotations = annotations_train + annotations_val
 
-        self.load_original_annotations()
-        print("Processing annotations")
-        # process punctuation
-        print("\tPre-Processing punctuation")
-        for annot in tqdm(self.annotations):
-            for ansDic in annot["answers"]:
-                ansDic["answer"] = vqa_utils.processPunctuation(
-                    ansDic["answer"])
-        # process scores of every answer
-        print("\tPre-Computing answer scores")
-        for annot in tqdm(self.annotations):
-            annot["scores"] = {}
-            unique_answers = set([a["answer"] for a in annot["answers"]])
-            for ans in unique_answers:
-                scores = []
-                # score is average of 9/10 answers
-                for items in combinations(annot["answers"], 9):
-                    matching_ans = [
-                        item for item in items if item["answer"] == ans]
-                    score = min(1, float(len(matching_ans)) / 3)
-                    scores.append(score)
-                annot["scores"][ans] = mean(scores)
-        print(
-            f"Saving processed annotations at {self.path_annotations_processed}")
-        with open(self.path_annotations_processed, "w") as f:
-            json.dump(self.annotations, f)
+            print("Processing annotations")
+            processor = EvalAIAnswerProcessor()
 
-    def load_original_annotations(self):
-        with zipfile.ZipFile(self.path_original_annotations) as z:
-            filename = z.namelist()[0]
-            with z.open(filename) as f:
-                self.annotations = json.load(f)["annotations"]
+            print("\tPre-Processing answer punctuation")
+            for annot in tqdm(all_annotations):
+                
+                annot["multiple_choice_answer"] = processor(annot["multiple_choice_answer"])
+                # vqa_utils.processPunctuation(
+                #     annot["multiple_choice_answer"]
+                # )
+                for ansDic in annot["answers"]:
+                    ansDic["answer"] = processor(ansDic["answer"])
+
+            print("\tPre-Computing answer scores")
+            for annot in tqdm(all_annotations):
+                annot["scores"] = {}
+                unique_answers = set([a["answer"] for a in annot["answers"]])
+                for ans in unique_answers:
+                    scores = []
+                    # score is average of 9/10 answers
+                    for items in combinations(annot["answers"], 9):
+                        matching_ans = [item for item in items if item["answer"] == ans]
+                        score = min(1, float(len(matching_ans)) / 3)
+                        scores.append(score)
+                    annot["scores"][ans] = mean(scores)
+            print(f"Saving processed annotations at {path_train} and {path_val}")
+
+            with open(self.path_annotations_processed["train"], "w") as f:
+                json.dump(annotations_train, f)
+            with open(self.path_annotations_processed["val"], "w") as f:
+                json.dump(annotations_val, f)
+
+        #####################################
+        # Processing min occurences of answer
+        #####################################
+        if not os.path.exists(self.path_answers):
+            print(f"Removing uncommon answers")
+            annotations_train = self.load_processed_annotations("train")
+            annotations_val = self.load_processed_annotations("val")
+            all_annotations = annotations_train + annotations_val
+
+            occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
+            self.answers = [ans for ans in occ if occ[ans] >= self.min_ans_occ]
+            print(
+                f"Num answers after keeping occ >= {self.min_ans_occ}: {len(self.answers)}."
+            )
+            print(f"Saving answers at {self.path_answers}")
+            with open(self.path_answers, "w") as f:
+                json.dump(self.answers, f)
 
     def load(self):
         print("Loading questions")
-        with zipfile.ZipFile(self.path_questions) as z:
-            filename = z.namelist()[0]
-            with z.open(filename) as f:
-                self.questions = json.load(f)["questions"]
+        with open(self.path_questions[self.split]) as f:
+            self.questions = json.load(f)["questions"]
 
         print("Loading annotations")
         if self.has_annotations:
-            with open(self.path_annotations_processed) as f:
+            with open(self.path_annotations_processed[self.split]) as f:
                 self.annotations = json.load(f)
 
-    def download(self):
-        os.makedirs(os.path.join(self.dir_data, self.name), exist_ok=True)
-        url_questions = self.url_questions[self.split]
-        download_path = self.path_questions
-        if not os.path.exists(download_path):
-            print(
-                f"Downloading questions at {url_questions} to {download_path}")
-            urllib.request.urlretrieve(url_questions, download_path)
-            urllib.request.urlretrieve(url_questions, download_path)
+        print(f"Loading aid_to_ans")
+        with open(self.path_answers) as f:
+            self.answers = json.load(f)
 
-        if self.has_annotations:  # No annotations for test
-            url_annotations = self.url_annotations[self.split]
-            download_path = self.path_original_annotations
-            if not os.path.exists(download_path):
-                print(
-                    f"Downloading annotations {url_annotations} to {download_path}")
-                urllib.request.urlretrieve(url_annotations, download_path)
+    def download(self):
+        # download all splits
+        for split in self.url_questions.keys():
+            url_questions = self.url_questions[split]
+            directory = self.dir_splits[split]
+            path_questions = self.path_questions[split]
+            if not os.path.exists(path_questions):
+                print(f"Downloading questions at {url_questions} to {directory}")
+                download_and_unzip(url_questions, directory=directory)
+
+        for split in self.url_annotations.keys():
+            url_annotations = self.url_annotations[split]
+            directory = self.dir_splits[split]
+            path_annotations = self.path_original_annotations[split]
+            if not os.path.exists(path_annotations):
+                print(f"Downloading annotations {url_annotations} to {directory}")
+                download_and_unzip(url_annotations, directory=directory)
 
     def __len__(self):
         return len(self.questions)
@@ -255,8 +305,7 @@ class VQA(Dataset):
         result_batch = {}
         for key in batch[0]:
             if key not in no_collate_keys:
-                result_batch[key] = default_collate(
-                    [item[key] for item in batch])
+                result_batch[key] = default_collate([item[key] for item in batch])
             else:
                 result_batch[key] = [item[key] for item in batch]
         return result_batch
@@ -291,8 +340,21 @@ class VQA2(VQA):
         "val": "https://s3.amazonaws.com/cvmlp/vqa/mscoco/vqa/v2_Annotations_Val_mscoco.zip",
     }
 
+    filename_questions = {
+        "train": "v2_OpenEnded_mscoco_train2014_questions.json",
+        "val": "v2_OpenEnded_mscoco_val2014_questions.json",
+        "test": "v2_OpenEnded_mscoco_test2015_questions.json",
+        "test-dev": "v2_OpenEnded_mscoco_test-dev2015_questions.json",
+    }
+
+    filename_annotations = {
+        "train": "v2_mscoco_train2014_annotations.json",
+        "val": "v2_mscoco_val2014_annotations.json",
+    }
 
 class VQACP(VQA):
+
+    DOWNLOAD_SPLITS = ["train", "test"]
 
     name = "vqacp"
 
@@ -308,7 +370,7 @@ class VQACP(VQA):
 
     def load_features(self):
         self.feats = get_features(
-            self.features, split="trainval", dir_cache=self.dir_features,
+            self.features, split="trainval", dir_data=self.dir_features,
         )
 
     def load_original_annotations(self):

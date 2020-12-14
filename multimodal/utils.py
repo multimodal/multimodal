@@ -11,12 +11,17 @@ def download_file(url, directory, filename=None):
     path = directory
     if filename:
         path = os.path.join(directory, filename)
-    print(f"Downloading file from {url} at {path}")
     obj = SmartDL(url, path)
     obj.start()
     return obj.get_dest()
 
 
-def download_and_unzip(url, directory, filename=None):
+def download_and_unzip(url, directory=None, filename=None, path=None):
+    """
+    """
+    if directory is None:
+        if path is None:
+            raise ValueError("Either path or directory must be specified")
+        directory = os.path.basename(path)
     dest = download_file(url, directory, filename=filename)
     unpack_archive(dest, extract_dir=directory)
