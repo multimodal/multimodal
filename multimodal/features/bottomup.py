@@ -49,6 +49,9 @@ class COCOBottomUpFeatures:
     }
 
     def __init__(self, features, dir_data=None):
+        """
+        features: one of [trainval2014_36, trainval2014, test2014_36, test2014, test2015-36, test2015]
+        """
         self.features_name = features
         self.featsfile = None  # Lazy loading of zipfile
         dir_data = dir_data or DEFAULT_DATA_DIR
@@ -102,7 +105,7 @@ class COCOBottomUpFeatures:
                 reader = csv.DictReader(
                     tsv_in_file, delimiter="\t", fieldnames=FIELDNAMES
                 )
-                for item in tqdm(reader):
+                for item in tqdm(reader, total=123287):
                     item["image_id"] = int(item["image_id"])
                     item["image_h"] = int(item["image_h"])
                     item["image_w"] = int(item["image_w"])
