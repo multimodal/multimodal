@@ -13,9 +13,9 @@ def get_features(name, split, dir_data):
             "variable dir_cache, or "
             "environment variable MULTIMODAL_FEATURES_DIR"
         )
-    if name == "coco-bottom-up":
+    if name == "coco-bottomup":
         features = COCOBottomUpFeatures(dir_data=dir_data, features=split)
-    elif name == "coco-bottom-up-36":
+    elif name == "coco-bottomup-36":
         features = COCOBottomUpFeatures(dir_data=dir_data, features=split + "_36")
     elif name == "mock-features":
         features = MockFeatures()
