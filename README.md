@@ -41,7 +41,7 @@ Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2
 # Visual Question Answering
 from multimodal.datasets import VQA, VQA2, VQACP, VQACP2
 
-dataset = VQA(split="train", features="coco-bottom-up", dir_data="/tmp")
+dataset = VQA(split="train", features="coco-bottomup", dir_data="/tmp")
 item = dataset[0]
 
 dataloader = torch.utils.data.Dataloader(dataset, collate_fn = VQA.collate_fn)
