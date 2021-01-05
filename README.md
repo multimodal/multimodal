@@ -18,6 +18,8 @@ And also word embeddings (either from scratch, or pretrained from torchtext, tha
 
 ## Simple Usage
 
+To install the library, run `pip install multimodal`. It is supported for python 3.6 and 3.7.
+
 ### Visual Features
 
 Available features are COCOBottomUpFeatures
