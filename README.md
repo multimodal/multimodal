@@ -1,5 +1,7 @@
 # multimodal
 
+[![PyPI](https://img.shields.io/pypi/v/multimodal.svg)](https://pypi.python.org/pypi/multimodal/)
+
 A collection of multimodal (vision and language) datasets and visual features for deep learning research.
 
 Currently it supports the following visual features (downloaded automatically): 
