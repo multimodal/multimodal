@@ -373,7 +373,7 @@ class VQA(AbstractVQA):
             ans_type = annot["answer_type"]
             scores["overall"].append(score)
             scores[ans_type].append(score)
-        return {key: mean(score_list) for key, score_list in scores.items()}
+        return {key: mean(score_list) if len(score_list) else 0.0 for key, score_list in scores.items()}
 
 
 class VQADataModule(pl.LightningDataModule):
