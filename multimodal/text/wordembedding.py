@@ -13,6 +13,9 @@ https://github.com/bheinzerling/bpemb
 https://github.com/google/sentencepiece
 """
 
+def get_dim_from_name(name):
+    return int(pretrained_aliases[name].keywords["dim"])
+
 
 class WordEmbedding(nn.Module):
     """
@@ -70,18 +73,21 @@ class WordEmbedding(nn.Module):
         """
         dir_data = dir_data or DEFAULT_DATA_DIR
         cache = os.path.join(dir_data, "word-embeddings")
-        dim = int(pretrained_aliases[name].keywords["dim"])
+        dim = get_dim_from_name(name)
         vocab = pretrained_aliases[name](
             cache=cache, unk_init=unk_init, max_vectors=max_tokens,
         )
         if tokens is None:
             tokens = vocab.itos
         embedding = cls(tokens, dim=dim, freeze=freeze)
+        n_missing = 0
         for token in embedding.tokens:
             token_id = embedding.tokens_to_id[token]
             if token not in vocab.itos:
-                print(f"Missing token : {token}")
+                n_missing += 1
+                # print(f"Missing token : {token}")
             embedding.embedding.weight.data[token_id] = vocab[token]
+        print(f"Number of missing tokens: {n_missing} / {len(tokens)}")
         return embedding
 
     def filter_and_pad(self, sentences):
@@ -132,8 +138,8 @@ class WordEmbedding(nn.Module):
     def load_state_dict(self, state_dict, strict=True):
         tokens = state_dict.pop("tokens")
         self.tokens = tokens
+        self.tokens_to_id = {token: i for i, token in enumerate(self.tokens)}
         super().load_state_dict(state_dict, strict=strict)
-        self.initialized = True
 
     def log_one(self):
         if self.compute_stats:
