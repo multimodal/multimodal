@@ -2,7 +2,6 @@
 Vision features for muldimodal tasks like Image Captioning, VQA or image retrieval
 """
 # std
-from multimodal import DEFAULT_DATA_DIR
 import os
 import zipfile
 import csv
@@ -12,14 +11,12 @@ import sys
 
 # packages
 from tqdm import tqdm
-import shutil
 import numpy as np
 from pySmartDL import SmartDL
 import tables as tb
-import sqlitedict
 
 # multimodal
-from multimodal.utils import download_file
+from multimodal import DEFAULT_DATA_DIR
 
 csv.field_size_limit(sys.maxsize)
 FIELDNAMES = ["image_id", "image_w", "image_h", "num_boxes", "boxes", "features"]
