@@ -10,6 +10,7 @@ REQUIRED_PKGS = [
     "torch>=1",
     "pySmartDL",
     "torchtext",
+    "tables",
 ]
 
 
