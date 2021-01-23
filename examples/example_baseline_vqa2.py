@@ -225,14 +225,14 @@ if __name__ == "__main__":
     # are big files. This might take a long time.
     vqa_train = VQA2(
         split="train",
-        features="coco-bottom-up-36",
+        features="coco-bottomup-36",
         dir_data=args.dir_data,
         min_ans_occ=9,
     )
 
     vqa_val = VQA2(
         split="val",
-        features="coco-bottom-up-36",
+        features="coco-bottomup-36",
         dir_data=args.dir_data,
         min_ans_occ=9,
     )
