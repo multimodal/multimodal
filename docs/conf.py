@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../"))
 
-import sphinx.ext.apidoc
+# import sphinx.ext.apidoc
 
 # -- Project information -----------------------------------------------------
 
@@ -41,28 +41,30 @@ release = ""
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # 'sphinx.ext.autodoc',
+    'sphinx.ext.autodoc',
     "sphinx.ext.mathjax",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
-    "autoapi.extension",
+    # "autoapi.extension",
     "sphinx_rtd_theme",
 ]
 
 #### autoapi
 
-autoapi_type = "python"
-autoapi_dirs = ["../multimodal"]
-autoapi_options = [
-    # "members",
-    "undoc-members",
-    "private-members",
-    "show-inheritance",
-    "show-module-summary",
-    "special-members",
-    "imported-members",
-]
+# autoapi_type = "python"
+# autoapi_dirs = ["../multimodal"]
+# autoapi_options = [
+#     # "members",
+#     "undoc-members",
+#     "private-members",
+#     "show-inheritance",
+#     "show-module-summary",
+#     "special-members",
+#     "imported-members",
+# ]
 
+# autoapi_generate_api_docs = False
+# autoapi_keep_files = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

@@ -32,7 +32,14 @@ class Metadata(tb.IsDescription):
 
 class COCOBottomUpFeatures:
     """
-    Bottom up features for the COCO dataste
+    Bottom up features for the COCO dataset
+
+    Args:
+        features (str): one of [``trainval2014_36``, ``trainval2014``, ``test2014_36``, ``test2014``, ``test2015-36``, ``test2015``]. 
+            Specifies the split, and the number of detected objects. _36 means 36 objetcs are detected in every image, and otherwise,
+            the number is based on a detection threshold, between 10 and 100 objects.
+        dir_data (str): Directory where multimodal data will be downloaded. You need at least 60Go for downloading
+            and extracting the features.
     """
 
     name = "coco-bottom-up"
@@ -60,10 +67,7 @@ class COCOBottomUpFeatures:
         "test2014": ["test2014/test2014_resnet101_faster_rcnn_genome.tsv"],
     }
 
-    def __init__(self, features, dir_data=None):
-        """
-        features: one of [trainval2014_36, trainval2014, test2014_36, test2014, test2015-36, test2015]
-        """
+    def __init__(self, features: str, dir_data: str=None):
         self.features_name = features
         self.db = None  # Lazy loading of zipfile
         dir_data = dir_data or DEFAULT_DATA_DIR
@@ -75,7 +79,7 @@ class COCOBottomUpFeatures:
         if not os.path.exists(self.featspath):
             path_download = self.download()
             print("Processing file")
-            self.process_file(path_download, self.featspath)
+            self._process_file(path_download, self.featspath)
 
     def download(self):
         url = self.urls[self.features_name]
@@ -85,8 +89,26 @@ class COCOBottomUpFeatures:
             dl.start()
         return destination
 
-    def __getitem__(self, image_id: str):
-        self.check_open()
+    def __getitem__(self, image_id: int):
+        """
+        Get the features. 
+
+        Args:
+            image_id (str|int): The id of the image in COCO dataset.
+
+        Returns:
+            A dictionnary containing the following keys::
+
+                {
+                    'image_id',
+                    'image_h': height
+                    'image_w': width
+                    'num_boxes': number of objects
+                    'boxes': Numpy array of shape (N, 4) containing bounding box coordinates
+                    'features': Numpy array of shape (N, 2048) containing features.
+                }
+        """
+        self._check_open()
         data = self.db.metadata.read_where(f"image_id=={image_id}")[0]
         start_position = data["start_position"]
         num_boxes = data["num_boxes"]
@@ -100,15 +122,19 @@ class COCOBottomUpFeatures:
         data["boxes"] = boxes
         return data
 
-    def check_open(self):
+    def _check_open(self):
         if self.db is None:
             self.db = tb.open_file(self.featspath).root
 
     def keys(self):
-        self.check_open()
+        """
+        Returns:
+            list: List of all keys
+        """
+        self._check_open()
         return list(self.db.metadata.read(field="image_id"))
 
-    def process_file(self, path_infile: str, outpath: str):
+    def _process_file(self, path_infile: str, outpath: str):
         directory = os.path.dirname(path_infile)
         tsv_paths = self.tsv_paths[self.features_name]
         if type(tsv_paths) == str:
