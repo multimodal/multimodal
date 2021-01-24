@@ -17,6 +17,9 @@ import sys
 
 sys.path.insert(0, os.path.abspath("../"))
 
+autodoc_mock_imports = ["torch", "numpy", "scipy", "tables", "pytorch_lightning", "pySmartDL", "torchtext", "tqdm"]
+
+
 # import sphinx.ext.apidoc
 
 # -- Project information -----------------------------------------------------
