@@ -18,7 +18,13 @@ import sys
 sys.path.insert(0, os.path.abspath("../"))
 
 autodoc_mock_imports = ["torch", "numpy", "scipy", "tables", "pytorch_lightning", "pySmartDL", "torchtext", "tqdm"]
-
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__getitem__',
+    # 'undoc-members': True,
+    'exclude-members': '__weakref__'
+}
 
 # import sphinx.ext.apidoc
 
@@ -38,7 +44,7 @@ release = ""
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
-# needs_sphinx = '1.0'
+needs_sphinx = '3.4.3'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom

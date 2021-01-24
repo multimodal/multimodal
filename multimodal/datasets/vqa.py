@@ -32,6 +32,27 @@ class AbstractVQA(Dataset):
 
 
 class VQA(AbstractVQA):
+    """
+    Pytorch Dataset implementation for the VQA v1 dataset (visual question answering). 
+    See https://visualqa.org/ for more details about it.
+    
+    When this class is instanciated, data will be downloaded in the directory specified by the ``dir_data`` parameter.
+    Pre-processing of questions and answers will take several minutes.
+
+    When the ``features`` argument is specified, visual features will be downloaded as well. About 60Go will be 
+    necessary for downloading and extracting features.
+
+    Args:
+        dir_data (str): dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
+        features (str): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+        split (str): Which t [``train``, ``val``, ``test``]
+        dir_features (str): directory to download features. If None, defaults to $dir_data/features
+        label (str): either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
+            given by the score they are assigned by the VQA evaluation. 
+            If `best`, GT is the label of the top answer.
+        tokenize_questions (bool): If True, preprocessing will tokenize questions into tokens.
+            The tokens are stored in item["question_tokens"].
+    """
 
     SPLITS = ["train", "val", "test", "test-dev"]
 
@@ -69,17 +90,6 @@ class VQA(AbstractVQA):
         label="multilabel",
         tokenize_questions=False,
     ):
-        """
-        dir_data: dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
-        features: which visual features should be used. Choices: coco-bottomup or coco-bottomup-36
-        split: in [train, val, test]
-        dir_features: directory to download features. If None, defaults to $dir_data/features
-        label: either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
-            given by the score they are assigned by the VQA evaluation. 
-            If `best`, GT is the label of the top answer.
-        tokenize_questions: If True, preprocessing will tokenize questions into tokens.
-            The tokens are stored in item["question_tokens"].
-        """
         self.dir_data = dir_data
         if self.dir_data is None:
             self.dir_data = DEFAULT_DATA_DIR
@@ -138,13 +148,13 @@ class VQA(AbstractVQA):
             self.dir_dataset, f"aid_to_ans-{self.min_ans_occ}.json"
         )
 
-        self.download()
-        self.process_annotations()
+        self._download()
+        self._process_annotations()
 
         if self.features is not None:
-            self.load_features()
+            self._load_features()
 
-        self.load()  # load questions and annotations
+        self._load()  # load questions and annotations
 
         if self.has_annotations:
             # This dictionnary will be used for evaluation
@@ -153,19 +163,19 @@ class VQA(AbstractVQA):
         # aid_to_ans
         self.ans_to_aid = {ans: i for i, ans in enumerate(self.answers)}
 
-    def load_questions(self, split):
+    def _load_questions(self, split):
         with open(self.path_questions[split]) as f:
             return json.load(f)["questions"]
 
-    def load_original_annotations(self, split):
+    def _load_original_annotations(self, split):
         with open(self.path_original_annotations[split]) as f:
             return json.load(f)["annotations"]
 
-    def load_processed_annotations(self, split):
+    def _load_processed_annotations(self, split):
         with open(self.path_annotations_processed[split]) as f:
             return json.load(f)
 
-    def load_features(self):
+    def _load_features(self):
         if self.split == "test":
             self.feats = get_features(
                 self.features, split="test2015", dir_data=self.dir_features,
@@ -181,10 +191,18 @@ class VQA(AbstractVQA):
             set((token for q in self.questions for token in tokenizer(q["question"])))
         )
 
-    def get_word_embeddings(self, name, freeze=True):
+    def get_word_embeddings(self, name: str, freeze=True) -> WordEmbedding:
         """
         This will create the word embedding adapted to the dataset, and will cache it in the
         dataset directory for faster usage.
+        Args:
+            name (str): any name available in torchtext.
+            freeze (bool): If true, embedding will be set with ``requires_grad=False``
+                so that no update is done on the weights. Default is True.
+        
+        Returns:
+            (WordEmbedding)
+        
         """
         os.makedirs(os.path.join(self.dir_dataset, "wordembeddings"), exist_ok=True)
         path = os.path.join(self.dir_dataset, "wordembeddings", f"{name}.pth")
@@ -204,7 +222,7 @@ class VQA(AbstractVQA):
             torch.save(w_emb.state_dict(), path)
         return w_emb
 
-    def process_annotations(self):
+    def _process_annotations(self):
         """Process answers to create answer tokens,
         and precompute VQA score for faster evaluation.
         This follows the official VQA evaluation tool.
@@ -212,8 +230,8 @@ class VQA(AbstractVQA):
         path_train = self.path_annotations_processed["train"]
         path_val = self.path_annotations_processed["val"]
         if not os.path.exists(path_train) or not os.path.exists(path_val):
-            annotations_train = self.load_original_annotations("train")
-            annotations_val = self.load_original_annotations("val")
+            annotations_train = self._load_original_annotations("train")
+            annotations_val = self._load_original_annotations("val")
             all_annotations = annotations_train + annotations_val
 
             print("Processing annotations")
@@ -258,8 +276,8 @@ class VQA(AbstractVQA):
         #####################################
         if not os.path.exists(self.path_answers):
             print(f"Removing uncommon answers")
-            annotations_train = self.load_processed_annotations("train")
-            annotations_val = self.load_processed_annotations("val")
+            annotations_train = self._load_processed_annotations("train")
+            annotations_val = self._load_processed_annotations("val")
             all_annotations = annotations_train + annotations_val
 
             occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
@@ -271,7 +289,7 @@ class VQA(AbstractVQA):
             with open(self.path_answers, "w") as f:
                 json.dump(self.answers, f)
 
-    def load(self):
+    def _load(self):
         print("Loading questions")
         with open(self.path_questions[self.split]) as f:
             self.questions = json.load(f)["questions"]
@@ -285,7 +303,7 @@ class VQA(AbstractVQA):
         with open(self.path_answers) as f:
             self.answers = json.load(f)
 
-    def download(self):
+    def _download(self):
         # download all splits
         for split in self.url_questions.keys():
             url_questions = self.url_questions[split]
@@ -304,6 +322,9 @@ class VQA(AbstractVQA):
                 download_and_unzip(url_annotations, directory=directory)
 
     def __len__(self):
+        """
+        Returns the number of (question-image-answer) items in the dataset.
+        """
         return len(self.questions)
 
     def __getitem__(self, index):
@@ -350,6 +371,9 @@ class VQA(AbstractVQA):
 
     @staticmethod
     def collate_fn(batch):
+        """
+        Use this method to collate batches of data.
+        """
         no_collate_keys = ["scores", "question_id", "question_tokens"]
         result_batch = {}
         for key in batch[0]:
@@ -361,7 +385,14 @@ class VQA(AbstractVQA):
 
     def evaluate(self, predictions):
         """
-        predictions: list of answer_id
+        Evaluates a list of predictions, according to the VQA evaluation protocol. See https://visualqa.org/evaluation.html.
+
+        Args:
+            predictions (list): List of dictionnaries containing ``question_id`` and ``answer`` keys. The answer must be specified 
+                as a string.
+
+        Returns:
+            A dict of floats containing scores for "overall", "yes/no", number", and "other" questions.
         """
         scores = {"overall": [], "yes/no": [], "number": [], "other": []}
         for p in predictions:
@@ -372,11 +403,34 @@ class VQA(AbstractVQA):
             ans_type = annot["answer_type"]
             scores["overall"].append(score)
             scores[ans_type].append(score)
-        return {key: mean(score_list) if len(score_list) else 0.0 for key, score_list in scores.items()}
-
+        return {
+            key: mean(score_list) if len(score_list) else 0.0
+            for key, score_list in scores.items()
+        }
 
 
 class VQA2(VQA):
+    """
+    Pytorch Dataset implementation for the VQA v2 dataset (visual question answering). 
+    See https://visualqa.org/ for more details about it.
+    
+    When this class is instanciated, data will be downloaded in the directory specified by the ``dir_data`` parameter.
+    Pre-processing of questions and answers will take several minutes.
+
+    When the ``features`` argument is specified, visual features will be downloaded as well. About 60Go will be 
+    necessary for downloading and extracting features.
+
+    Args:
+        dir_data (str): dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
+        features (str): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+        split (str): Which t [``train``, ``val``, ``test``]
+        dir_features (str): directory to download features. If None, defaults to $dir_data/features
+        label (str): either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
+            given by the score they are assigned by the VQA evaluation. 
+            If `best`, GT is the label of the top answer.
+        tokenize_questions (bool): If True, preprocessing will tokenize questions into tokens.
+            The tokens are stored in item["question_tokens"].
+    """
 
     name = "vqa2"
 
@@ -403,8 +457,27 @@ class VQA2(VQA):
     }
 
 
-
 class VQACP(VQA):
+    """  Pytorch Dataset implementation for the VQA-CP v1 dataset (visual question answering). 
+    See https://www.cc.gatech.edu/grads/a/aagrawal307/vqa-cp/ for more details about it.
+    
+    When this class is instanciated, data will be downloaded in the directory specified by the ``dir_data`` parameter.
+    Pre-processing of questions and answers will take several minutes.
+
+    When the ``features`` argument is specified, visual features will be downloaded as well. About 60Go will be 
+    necessary for downloading and extracting features.
+
+    Args:
+        dir_data (str): dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
+        features (str): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+        split (str): Which t [``train``, ``val``, ``test``]
+        dir_features (str): directory to download features. If None, defaults to $dir_data/features
+        label (str): either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
+            given by the score they are assigned by the VQA evaluation. 
+            If `best`, GT is the label of the top answer.
+        tokenize_questions (bool): If True, preprocessing will tokenize questions into tokens.
+            The tokens are stored in item["question_tokens"].
+    """
 
     DOWNLOAD_SPLITS = ["train", "test"]
 
@@ -441,6 +514,26 @@ class VQACP(VQA):
 
 
 class VQACP2(VQACP):
+    """  Pytorch Dataset implementation for the VQA-CP v2 dataset (visual question answering). 
+    See https://www.cc.gatech.edu/grads/a/aagrawal307/vqa-cp/ for more details about it.
+    
+    When this class is instanciated, data will be downloaded in the directory specified by the ``dir_data`` parameter.
+    Pre-processing of questions and answers will take several minutes.
+
+    When the ``features`` argument is specified, visual features will be downloaded as well. About 60Go will be 
+    necessary for downloading and extracting features.
+
+    Args:
+        dir_data (str): dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
+        features (str): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+        split (str): Which t [``train``, ``val``, ``test``]
+        dir_features (str): directory to download features. If None, defaults to $dir_data/features
+        label (str): either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
+            given by the score they are assigned by the VQA evaluation. 
+            If `best`, GT is the label of the top answer.
+        tokenize_questions (bool): If True, preprocessing will tokenize questions into tokens.
+            The tokens are stored in item["question_tokens"].
+    """
 
     name = "vqacp2"
 
@@ -453,5 +546,4 @@ class VQACP2(VQACP):
         "train": "https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_train_annotations.json",
         "test": "https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_annotations.json",
     }
-
 

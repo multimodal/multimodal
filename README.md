@@ -40,7 +40,7 @@ Available features are COCOBottomUpFeatures
 
 ### Datasets
 
-Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2
+Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
 
 ```python
 # Visual Question Answering
