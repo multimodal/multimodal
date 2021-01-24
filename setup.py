@@ -11,7 +11,6 @@ REQUIRED_PKGS = [
     "pySmartDL",
     "torchtext",
     "tables",
-    "pytorch_lightning",
 ]
 
 
