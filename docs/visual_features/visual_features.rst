@@ -27,9 +27,6 @@ They can be used for most Visual Question Answering and Captionning that use the
     # (36, 2048)
 
 
-Specifications
---------------
-
 .. autoclass:: multimodal.features.COCOBottomUpFeatures
     :members:
     :private-members:
