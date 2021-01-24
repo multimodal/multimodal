@@ -2,11 +2,10 @@ Visual Question Answering
 -------------------------
 
 
-VQA v1
-======
-Visual Question Answering datasets are explained here.
+Visual Question Answering datasets are available in **multimodal**.
+Annotations data are automatically downloaded and processed when the 
+class is instanciated. Note that the pre-processing can take several minutes.
 
-This page is still in construction.
 
 
 .. autoclass:: multimodal.datasets.VQA
