@@ -11,6 +11,14 @@ from tqdm import tqdm
 
 from multimodal.features import get_features
 
+def download(url, directory):
+    basename = get_basename(url)
+    path = os.path.join(directory, basename)
+    os.makedirs(directory, exist_ok=True)
+    obj = SmartDL(url, path)
+    obj.start()
+    return obj.get_dest()
+
 
 def get_basename(url):
     return url.split("/")[-1]
