@@ -6,51 +6,51 @@ import numpy as np
 from collections import defaultdict
 import pickle
 from typing import List
+import torch
 
-
-class VQAQuestionTokenizer:
+class BasicTokenizer:
     """
     This class maps word tokens to token_ids.
     In case of unknown token ids, the 
     It will also pad the data.
 
     Args:
+        tokens (list): Tokens to add in the dictionnary. Those can be tokens from pretrain vectors.
         sentences (list): List of sentences that need to be tokenized first, before building the vocab.
-        additional_tokens (list): Tokens to add in the dictionnary if they were not there in the first place.
-            This can be used to add vocabulary from pretrained word vectors for instance.
+            Tokens from those sentences will be added to the vocabulary if they were not in it already.
         name (str): name which will be used to save the tokenizer. Use a different name when changing the tokens.
     """
 
-    urls = {
-        "vqa2": "https://webia.lip6.fr/~dancette/multimodal",
-    }
+    base_url = "https://webia.lip6.fr/~dancette/multimodal/tokenizers/{name}"
 
     def __init__(
         self,
-        tokens: List[str] = None,
-        sentences: List[str] = None,
+        tokens: List[str] = [],
+        sentences: List[str] = [],
         name: str = None,
         pad_token="<pad>",
         unk_token="<unk>",
-        padding_size="right",
+        padding_side="right",
         dir_data: str = None,
     ):
-        self.tokenizer = get_tokenizer("basic_english")
-
         if dir_data is None:
             dir_data = DEFAULT_DATA_DIR
-        os.makedirs(
-            os.path.join(dir_data, "tokenizers", "vqa_tokenizer"), exist_ok=True
-        )
+        self.dir = os.path.join(dir_data, "tokenizers")
+        self.tokenizer = get_tokenizer("basic_english")
+
+        os.makedirs(os.path.join(self.dir), exist_ok=True)
 
         if name is None:
-            # hash the vocab to create a unique name ?
-            name = "VQATokenizer"
+            name = hash(
+                (tuple(tokens), tuple(sentences), pad_token, unk_token, padding_side)
+            )
+            name = abs(name)  # positive hash, nicer filename (1 bit is lost).
+            name = str(name)
 
-        self.path = os.path.join(dir_data, "tokenizers", "vqa_tokenizer", name)
+        self.path = os.path.join(self.dir, name)
 
         if self.path is not None and os.path.exists(self.path):
-            print("Loading VQATokenizer")
+            print(f"Loading VQATokenizer at {self.path}")
             with open(self.path, "rb") as f:
                 data = pickle.load(f)
             self.tokens = data["tokens"]
@@ -80,7 +80,7 @@ class VQAQuestionTokenizer:
             self.token_id = defaultdict(lambda: self.unk_token_id)
             self.tokens.append(self.unk_token)
 
-            if padding_size == "right":
+            if padding_side == "right":
                 self.pad_token_id = self.unk_token_id + 1
                 self.tokens.append(self.pad_token)
             else:
@@ -103,25 +103,42 @@ class VQAQuestionTokenizer:
     @classmethod
     def from_pretrained(cls, name, dir_data=None):
         dir_data = dir_data or DEFAULT_DATA_DIR
-        path = download(
-            cls.urls[name], os.path.join(dir_data, "tokenizers", "vqa_tokenizer", name)
-        )
-        return VQAQuestionTokenizer(path=path)
+        url = cls.base_url.format(name=name)
+        path = download(url, os.path.join(dir_data, "tokenizers"))
+        return BasicTokenizer(name=name)
 
-    def tokenize(self, s):
+    def tokenize(self, s, keep_unk=False, padding=True):
+        """
+        This function will return the tokenized representation of the input.
+        Example: tokenize("Hello there") will return ["hello", "there"], assuming both words are in the vocabulary.
+        
+        In case a list of strings is given as input, this function will add padding tokens to ensure that all
+        outputs have the same length.
+
+        Args:
+            s (str | List[str]): Either a string or a list of string, to be tokenized.
+            keep_unk (bool): If true, then the tokenizes will not replace unknown words with the UNK token. Default: false
+            padding (bool): Whether to add the padding token or not.
+        """
         if type(s) == str:
-            return self.tokenizer(s)
+            tokens = self.tokenizer(s)
+            if not keep_unk:
+                tokens = [t for t in tokens if t in self.token_to_id]
         elif type(s) == list:
             sentences = [self.tokenizer(sentence) for sentence in s]
             max_lengths = max(len(sent) for sent in sentences)
             # Padding
-            sentences = [
-                sentence + [self.pad_token] * (max_lengths - len(sentence))
-                for sentence in sentences
-            ]
+            if padding:
+                sentences = [
+                    sentence + [self.pad_token] * (max_lengths - len(sentence))
+                    for sentence in sentences
+                ]
             return sentences
 
     def convert_tokens_to_ids(self, tokens):
+        """
+        Converts tokenized representations 
+        """
         if type(tokens[0]) == str:
             print(tokens)
             return np.array(
@@ -142,4 +159,7 @@ class VQAQuestionTokenizer:
 
     def __call__(self, s):
         tokens = self.tokenize(s)
-        return self.convert_tokens_to_ids(tokens)
+        return torch.tensor(self.convert_tokens_to_ids(tokens))
+
+    def get_num_tokens(self):
+        return len(self.tokens)
