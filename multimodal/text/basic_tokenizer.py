@@ -68,7 +68,7 @@ class BasicTokenizer:
             if sentences is not None:
                 tokens_set = set(self.tokens)
                 for s in sentences:
-                    tokens = self.tokenize(s)
+                    tokens = self.tokenize(s, replace_unk=False)
                     for t in tokens:
                         if t not in tokens_set:
                             self.tokens.append(t)
@@ -107,7 +107,7 @@ class BasicTokenizer:
         path = download(url, os.path.join(dir_data, "tokenizers"))
         return BasicTokenizer(name=name)
 
-    def tokenize(self, s, keep_unk=False, padding=True):
+    def tokenize(self, s, replace_unk=True, padding=True):
         """
         This function will return the tokenized representation of the input.
         Example: tokenize("Hello there") will return ["hello", "there"], assuming both words are in the vocabulary.
@@ -122,8 +122,9 @@ class BasicTokenizer:
         """
         if type(s) == str:
             tokens = self.tokenizer(s)
-            if not keep_unk:
-                tokens = [t for t in tokens if t in self.token_to_id]
+            if replace_unk:
+                tokens = [t  if t in self.token_to_id else self.unk_token for t in tokens]
+            return tokens
         elif type(s) == list:
             sentences = [self.tokenizer(sentence) for sentence in s]
             max_lengths = max(len(sent) for sent in sentences)
@@ -157,9 +158,12 @@ class BasicTokenizer:
             ]
             return np.array(token_ids)
 
-    def __call__(self, s):
+    def __call__(self, s, tensor_type="np"):
         tokens = self.tokenize(s)
-        return torch.tensor(self.convert_tokens_to_ids(tokens))
+        token_ids = self.convert_tokens_to_ids(tokens)
+        if tensor_type == "pt":
+            return torch.tensor(token_ids)
+        return token_ids
 
     def get_num_tokens(self):
         return len(self.tokens)
