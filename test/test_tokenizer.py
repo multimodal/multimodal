@@ -1,11 +1,11 @@
-from multimodal.datasets import VQAQuestionTokenizer
+from multimodal.text import BasicTokenizer
 import numpy as np
 import tempfile
 
 
 def test_vqa_tokenizer():
     with tempfile.TemporaryDirectory() as d:
-        tokenizer = VQAQuestionTokenizer(
+        tokenizer = BasicTokenizer(
             tokens=["hello", ",", "this", "is", "a", "tokenizer"], dir_data=d
         )
         assert tokenizer.tokenize("Hello, this is me") == [
@@ -13,8 +13,17 @@ def test_vqa_tokenizer():
             ",",
             "this",
             "is",
+            "<unk>",
+        ]
+
+        assert tokenizer.tokenize("Hello, this is me", replace_unk=False) == [
+            "hello",
+            ",",
+            "this",
+            "is",
             "me",
         ]
+
         assert tokenizer.tokens == [
             "hello",
             ",",
@@ -40,7 +49,7 @@ def test_vqa_tokenizer():
 def test_vqa_tokenizer_with_corups():
     corpus = ["Hello, this is a tokenizer", "this tokenizer"]
     with tempfile.TemporaryDirectory() as d:
-        tokenizer = VQAQuestionTokenizer(sentences=corpus, dir_data=d)
+        tokenizer = BasicTokenizer(sentences=corpus, dir_data=d)
         print(tokenizer.tokens)
         print(tokenizer.token_to_id)
         assert tokenizer.tokenize("Hello, this is me") == [
@@ -48,8 +57,17 @@ def test_vqa_tokenizer_with_corups():
             ",",
             "this",
             "is",
+            "<unk>",
+        ]
+
+        assert tokenizer.tokenize("Hello, this is me", replace_unk=False) == [
+            "hello",
+            ",",
+            "this",
+            "is",
             "me",
         ]
+
         assert tokenizer.tokens == [
             "hello",
             ",",
@@ -70,13 +88,14 @@ def test_vqa_tokenizer_with_corups():
             tokenizer(["Hello you", "Hi this me"]) == np.array([[0, 6, 7], [6, 2, 6],])
         )
 
+
 def test_loading_tokenizer():
     corpus = ["Hello, this is a tokenizer", "this tokenizer"]
     with tempfile.TemporaryDirectory() as d:
-        tokenizer = VQAQuestionTokenizer(sentences=corpus, dir_data=d, name="temp-tokenizer")
+        tokenizer = BasicTokenizer(sentences=corpus, dir_data=d, name="temp-tokenizer")
         tokens = tokenizer.tokens
 
-        tokenizer = VQAQuestionTokenizer(dir_data=d, name="temp-tokenizer")
+        tokenizer = BasicTokenizer(dir_data=d, name="temp-tokenizer")
         tokens2 = tokenizer.tokens
 
         assert tokens == tokens2
