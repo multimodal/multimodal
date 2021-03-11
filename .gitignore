@@ -143,3 +143,7 @@ cython_debug/
 
 # ide
 .vscode
+
+# vector
+.vector_cache/
+lightning_logs
