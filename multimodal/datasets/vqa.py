@@ -20,7 +20,6 @@ from multimodal.datasets import vqa_utils
 from multimodal import DEFAULT_DATA_DIR
 from multimodal.utils import download_and_unzip
 from multimodal.datasets.vqa_utils import EvalAIAnswerProcessor
-from multimodal.text import WordEmbedding
 
 
 class AbstractVQA(Dataset):
