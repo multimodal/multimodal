@@ -6,7 +6,6 @@ if os.environ.get("MULTIMODAL_DATA_DIR", None):
 else:
     DEFAULT_DATA_DIR = user_data_dir("multimodal")
 
-
 import multimodal.datasets
 import multimodal.text
 import multimodal.utils as utils
