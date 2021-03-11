@@ -13,11 +13,62 @@ https://github.com/bheinzerling/bpemb
 https://github.com/google/sentencepiece
 """
 
+
 def get_dim_from_name(name):
     return int(pretrained_aliases[name].keywords["dim"])
 
 
-class WordEmbedding(nn.Module):
+class PretrainedWordEmbedding(nn.Module):
+    def __init__(
+        self,
+        name: str,
+        tokens: list,
+        freeze=True,
+        max_tokens: int = None,
+        unk_init=None,
+        dir_data: str = None,
+        padding_idx=None,
+        **kwargs,
+    ):
+        """
+        name: One of [charngram.100d, fasttext.en.300d, fasttext.simple.300d, 
+            glove.42B.300d, glove.6B.100d, glove.6B.200d, glove.6B.300d, glove.6B.50d, 
+            glove.840B.300d, glove.twitter.27B.100d, glove.twitter.27B.200d, 
+            glove.twitter.27B.25d, glove.twitter.27B.50d]
+        tokens: specify list of tokens to be used. If `None`, 
+            load all tokens from word embedding (with `max_tokens`)
+        max_tokens: if `tokens` is None, this*
+        cache: path where word embeddings will be downloaded.
+        """
+        super().__init__()
+        dir_data = dir_data or DEFAULT_DATA_DIR
+        cache = os.path.join(dir_data, "word-embeddings")
+        dim = get_dim_from_name(name)
+        vocab = pretrained_aliases[name](
+            cache=cache, unk_init=unk_init, max_vectors=max_tokens,
+        )
+        if tokens is None:
+            tokens = vocab.itos
+
+        self.embedding = nn.Embedding(
+            len(tokens), dim, padding_idx=padding_idx, **kwargs
+        )
+        n_missing = 0
+        for token_id, token in enumerate(tokens):
+            if token not in vocab.itos:
+                n_missing += 1
+                # print(f"Missing token : {token}")
+            self.embedding.weight.data[token_id] = vocab[token]
+        print(f"Number of missing tokens: {n_missing} / {len(tokens)}")
+
+        if freeze:
+            self.embedding.weight.requires_grad = False
+
+    def forward(self, x):
+        return self.embedding(x)
+
+
+class PretrainedWordEmbeddingWithTokenizer(nn.Module):
     """
     Word Embedding class.
     """
@@ -33,7 +84,6 @@ class WordEmbedding(nn.Module):
             compute_stats: Total number of tokens and total number of unknown tokens processed will be saved in the
                 ```self.stats['unknown']``` and ```self.stats['total']``` attribute
         """
-
         super().__init__()
         tokens = list(sorted(tokens))  # to keep always the same order
         self.tokens = ["<pad>", "<unk>"] + tokens  # padding and unknown token
