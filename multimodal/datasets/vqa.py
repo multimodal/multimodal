@@ -199,36 +199,8 @@ class VQA(AbstractVQA):
             set((token for q in self.questions for token in tokenizer(q["question"])))
         )
 
-    def get_word_embeddings(self, name: str, freeze=True) -> WordEmbedding:
-        """
-        This will create the word embedding adapted to the dataset, and will cache it in the
-        dataset directory for faster usage.
-        Args:
-            name (str): any name available in torchtext.
-            freeze (bool): If true, embedding will be set with ``requires_grad=False``
-                so that no update is done on the weights. Default is True.
-        
-        Returns:
-            (WordEmbedding)
-        
-        """
-        os.makedirs(os.path.join(self.dir_dataset, "wordembeddings"), exist_ok=True)
-        path = os.path.join(self.dir_dataset, "wordembeddings", f"{name}.pth")
-        tokens = self.get_all_tokens()
-        if os.path.exists(path):
-            w_emb = WordEmbedding(tokens, dim=get_dim_from_name(name), freeze=freeze)
-            state_dict = torch.load(path)
-            w_emb.load_state_dict(state_dict)
-            print("done")
-        else:
-            print(
-                f"Loading and caching {name} word embeddings for {self.name} dataset."
-            )
-            w_emb = WordEmbedding.from_pretrained(
-                "glove.6B.300d", tokens=self.get_all_tokens(), dir_data=self.dir_data
-            )
-            torch.save(w_emb.state_dict(), path)
-        return w_emb
+    def get_all_questions(self):
+        return (q["question"] for q in self.questions)
 
     def _process_annotations(self):
         """Process answers to create answer tokens,
@@ -382,7 +354,7 @@ class VQA(AbstractVQA):
         """
         Use this method to collate batches of data.
         """
-        no_collate_keys = ["scores", "question_id", "question_tokens"]
+        no_collate_keys = ["scores", "question_id", "question"]
         result_batch = {}
         for key in batch[0]:
             if key not in no_collate_keys:
