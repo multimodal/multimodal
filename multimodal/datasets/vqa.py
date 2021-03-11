@@ -44,7 +44,8 @@ class VQA(AbstractVQA):
 
     Args:
         dir_data (str): dir for the multimodal cache (data will be downloaded in a vqa2/ folder inside this directory
-        features (str): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+        features (str|object): which visual features should be used. Choices: ``coco-bottomup`` or ``coco-bottomup-36``
+            You can also give directly the feature instance.
         split (str): Which t [``train``, ``val``, ``test``]
         dir_features (str): directory to download features. If None, defaults to $dir_data/features
         label (str): either `multilabel`, or `best`. For `multilabel`, GT scores for questions are
@@ -52,6 +53,8 @@ class VQA(AbstractVQA):
             If `best`, GT is the label of the top answer.
         tokenize_questions (bool): If True, preprocessing will tokenize questions into tokens.
             The tokens are stored in item["question_tokens"].
+        load (bool): default `True`. If false, then the questions annotations and questions will not be loaded
+            in memory. This is useful if you want only to download and process the data.
     """
 
     SPLITS = ["train", "val", "test", "test-dev"]
@@ -89,6 +92,7 @@ class VQA(AbstractVQA):
         dir_features=None,
         label="multilabel",
         tokenize_questions=False,
+        load=True,
     ):
         self.dir_data = dir_data
         if self.dir_data is None:
@@ -154,14 +158,15 @@ class VQA(AbstractVQA):
         if self.features is not None:
             self._load_features()
 
-        self._load()  # load questions and annotations
+        if load:
+            self._load()  # load questions and annotations
 
-        if self.has_annotations:
-            # This dictionnary will be used for evaluation
-            self.qid_to_annot = {a["question_id"]: a for a in self.annotations}
+            if self.has_annotations:
+                # This dictionnary will be used for evaluation
+                self.qid_to_annot = {a["question_id"]: a for a in self.annotations}
 
-        # aid_to_ans
-        self.ans_to_aid = {ans: i for i, ans in enumerate(self.answers)}
+            # aid_to_ans
+            self.ans_to_aid = {ans: i for i, ans in enumerate(self.answers)}
 
     def _load_questions(self, split):
         with open(self.path_questions[split]) as f:
