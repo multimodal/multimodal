@@ -1,9 +1,9 @@
-from multimodal.text import WordEmbedding
+from multimodal.text import PretrainedWordEmbeddingWithTokenizer
 import torch
 
 def test_embedding():
 
-    w = WordEmbedding(tokens=["hello", "hi", "this", "is", "a", "test"], dim=10)
+    w = PretrainedWordEmbeddingWithTokenizer(tokens=["hello", "hi", "this", "is", "a", "test"], dim=10)
 
     sentence1 = "Hello this is a test"
 
