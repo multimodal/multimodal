@@ -155,8 +155,11 @@ class VQA(AbstractVQA):
         self._download()
         self._process_annotations()
 
-        if self.features is not None:
+        if self.features is not None and type(features) == str:
             self._load_features()
+        elif self.features is not None and isinstance(self.features, type):
+            # object is given, do nothing.
+            pass
 
         if load:
             self._load()  # load questions and annotations
