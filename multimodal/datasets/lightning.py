@@ -33,6 +33,16 @@ class VQADataModule(pl.LightningDataModule):
         self.tokenize_question = tokenize_question
 
     def prepare_data(self):
+        self.dataset(
+            dir_data=self.dir_data,
+            split="train",
+            features=self.features,
+            min_ans_occ=self.min_ans_occ,
+            label=self.label,
+            load=False,
+        )
+
+    def setup(self):
         self.train_dataset = self.dataset(
             dir_data=self.dir_data,
             split="train",
@@ -41,7 +51,6 @@ class VQADataModule(pl.LightningDataModule):
             label=self.label,
         )
 
-    def setup(self):
         self.val_dataset = self.dataset(
             dir_data=self.dir_data,
             split="val",
