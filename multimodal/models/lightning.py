@@ -1,6 +1,7 @@
-import torch
 from multimodal.datasets.vqa import AbstractVQA
 import pytorch_lightning as pl
+import torch
+import torch.nn as nn
 
 class VQALightningModule(pl.LightningModule):
     def __init__(
