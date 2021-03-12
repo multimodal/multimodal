@@ -32,20 +32,19 @@ It uses pytorch lightning, with the class `multimodal.models.updown.VQALightning
 
 You can check the code to see other parameters.
 
-You can train the model yourself:
+You can train the model manually:
 
 ```python
 from multimodal.models import UpDownModel
-from multimodal.datasets.lightning import VQA2DataModule
+from multimodal.datasets.import VQA2
 from multimodal.text import BasicTokenizer
 vqa_tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa2")
 
-vqa2 = VQA2DataModule()
-vqa2.prepare_data()
-vqa2.setup()
-updown = UpDownModel(num_ans=len(vqa2.train_dataset.answers))
+train_dataset = VQA(split="train", features="coco-bottomup", dir_data="/tmp")
+train_loader = torch.utils.data.Dataloader(train_dataset, collate_fn = VQA.collate_fn)
 
-train_loader = vqa2.train_dataloader()
+updown = UpDownModel(num_ans=len(train_dataset.answers))
+
 for batch in train_loader:
     batch["question_tokens"] = vqa_tokenizer(batch["question"])
     out = updown(batch)
@@ -55,10 +54,14 @@ for batch in train_loader:
     optimizer.step()
 ```
 
-Or train it with pytorch_lightning:
+Or train it with Pytorch Lightning:
 
 ```python
 from multimodal.datasets.lightning import VQA2DataModule
+from multimodal.models.lightning import VQALightningModule
+from multimodal.text import BasicTokenizer
+import pytorch_lightning as pl
+
 tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa2")
 
 vqa2 = VQA2DataModule(
