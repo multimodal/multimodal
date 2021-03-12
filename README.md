@@ -56,7 +56,7 @@ for batch in dataloader:
     # training code...
 ```
 
-### Word embeddings
+### Pretrained Tokenizer and Word embeddings
 
 Word embeddings are implemented as pytorch modules. Thus, they are trainable if needed, but can be freezed.
 
@@ -66,15 +66,17 @@ Pretrained embedding weights are downloaded with torchtext. The following pretra
 Usage
 
 ```python
-from multimodal.text import WordEmbedding
+from multimodal.text import PretrainedWordEmbedding
+from multimodal.text import BasicTokenizer
 
-# Pretrained word embedding, freezed.
-wemb = WordEmbedding.from_pretrained("glove.840B.300d", freeze=True)
+# tokenizer converts words to tokens, and to token_ids. Pretrained tokenizers 
+# save token_ids from an existing vocabulary.
+tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa")
 
-# Word embedding from scratch, and trainable.
-wemb = Wordembedding(tokens, dim=50, freeze=False)
+# Pretrained word embedding, freezed. A list of tokens as input to initialize embeddings.
+wemb = PretrainedWordEmbedding.from_pretrained("glove.840B.300d", tokens=tokenizer.tokens, freeze=True)
 
-embeddings = wemb(["Inputs are batched, and padded. This is the first batch item", "This is the second batch item."])
+embeddings = wemb(tokenizer(["Inputs are batched, and padded. This is the first batch item", "This is the second batch item."]))
 ```
 
 ### API 

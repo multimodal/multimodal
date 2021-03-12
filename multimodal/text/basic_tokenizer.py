@@ -1,4 +1,4 @@
-from multimodal.datasets.coco import download, download_and_unzip
+from multimodal.datasets.coco import download
 from multimodal import DEFAULT_DATA_DIR
 import os
 from torchtext.data.utils import get_tokenizer
@@ -7,6 +7,7 @@ from collections import defaultdict
 import pickle
 from typing import List
 import torch
+
 
 class BasicTokenizer:
     """
@@ -19,6 +20,10 @@ class BasicTokenizer:
         sentences (list): List of sentences that need to be tokenized first, before building the vocab.
             Tokens from those sentences will be added to the vocabulary if they were not in it already.
         name (str): name which will be used to save the tokenizer. Use a different name when changing the tokens.
+        pad_token (str): token used to pad the data.
+        unk_token (str): token used for unknown words. The id is saved in the attribute unk_token_id.
+        pad_side (str): either "left" or "right". The pad_token_id attribute will save the position.
+        dir_data (str): directory to save multimodal data.
     """
 
     base_url = "https://webia.lip6.fr/~dancette/multimodal/tokenizers/{name}"
@@ -123,7 +128,9 @@ class BasicTokenizer:
         if type(s) == str:
             tokens = self.tokenizer(s)
             if replace_unk:
-                tokens = [t  if t in self.token_to_id else self.unk_token for t in tokens]
+                tokens = [
+                    t if t in self.token_to_id else self.unk_token for t in tokens
+                ]
             return tokens
         elif type(s) == list:
             sentences = [self.tokenizer(sentence) for sentence in s]
@@ -159,6 +166,13 @@ class BasicTokenizer:
             return np.array(token_ids)
 
     def __call__(self, s, tensor_type="np"):
+        """
+        This method calls tokenize(convert_tokens_to_ids(s))
+
+        Args:
+            s (list|str): text or list of texts to tokenize.
+            tensor_type (str): either "pt" for pytorch or "np" for numpy array.
+        """
         tokens = self.tokenize(s)
         token_ids = self.convert_tokens_to_ids(tokens)
         if tensor_type == "pt":
