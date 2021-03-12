@@ -149,9 +149,9 @@ class UpDownModel(nn.Module):
     def __init__(
         self,
         num_ans,
-        v_dim,
-        num_hid,
-        new_attention=False,
+        v_dim=2048,
+        num_hid=2048,
+        new_attention=True,
         tokens: list = None,
         num_tokens=None,
         padding_idx=None,
@@ -275,23 +275,24 @@ class VQALightningModule(pl.LightningModule):
         optim = torch.optim.Adamax(self.parameters())
         return optim
 
-
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--dir-data", help="dir where multimodal data (datasets, features) will be stored")
+    parser.add_argument("--dir-exp", default="logs/vqa2/updown")
     parser.add_argument("--v_dim", type=int, default=2048)
     parser.add_argument("--num_hid", type=int, default=2048)
     parser.add_argument("--batch_size", default=512, type=int)
     parser.add_argument("--min-ans-occ", default=9, type=int)
     parser.add_argument("--features", default="coco-bottomup-36")
     parser.add_argument("--old-attention", action="store_true")
-    parser.add_argument("--dir-exp", default="logs/vqa2/updown")
     parser.add_argument("--num-workers", default=6, type=int)
     parser.add_argument("--clip_grad", type=float, default=0.25)
     parser.add_argument("--freeze_emb", action="store_true")
     parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--gpus", help="Number of gpus to use")
+    parser.add_argument("--distributed-backend")
 
     args = parser.parse_args()
 
@@ -329,11 +330,12 @@ if __name__ == "__main__":
     )
 
     trainer = pl.Trainer(
-        gpus=2,
+        gpus=args.gpus,
         max_epochs=args.epochs,
         gradient_clip_val=args.clip_grad,
         default_root_dir=args.dir_exp,
         profiler="simple",
-        distributed_backend="ddp",
+        distributed_backend=args.distributed_backend,
     )
+
     trainer.fit(lightningmodel, datamodule=vqa2)

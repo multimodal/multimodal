@@ -23,6 +23,75 @@ And also word embeddings (either from scratch, or pretrained from torchtext, tha
 
 To install the library, run `pip install multimodal`. It is supported for python 3.6 and 3.7.
 
+### Models
+
+The Bottom-Up and Top-Down Attention for VQA model is implemented. 
+To train, run `python multimodal/models/updown.py --dir-data <path_to_multimodal_data> --dir-exp logs/vqa2/updown`
+
+It uses pytorch lightning, with the class `multimodal.models.updown.VQALightningModule`
+
+You can check the code to see other parameters.
+
+You can train the model yourself:
+
+```python
+from multimodal.models import UpDownModel
+from multimodal.datasets.lightning import VQA2DataModule
+from multimodal.text import BasicTokenizer
+vqa_tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa2")
+
+vqa2 = VQA2DataModule()
+vqa2.prepare_data()
+vqa2.setup()
+updown = UpDownModel(num_ans=len(vqa2.train_dataset.answers))
+
+train_loader = vqa2.train_dataloader()
+for batch in train_loader:
+    batch["question_tokens"] = vqa_tokenizer(batch["question"])
+    out = updown(batch)
+    logits = out["logits"]
+    loss = F.binary_cross_entropy_with_logits(logits, batch["label"])
+    loss.backward()
+    optimizer.step()
+```
+
+Or train it with pytorch_lightning:
+
+```python
+from multimodal.datasets.lightning import VQA2DataModule
+tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa2")
+
+vqa2 = VQA2DataModule(
+    features="coco-bottomup-36",
+    batch_size=512,
+    num_workers=4,
+)
+
+vqa2.prepare_data()
+num_ans = len(vqa2.num_ans)
+
+updown = UpDownModel(
+    num_ans=num_ans,
+    tokens=tokenizer.tokens,  # to init word embeddings
+)
+
+lightningmodel = VQALightningModule(
+    updown,
+    train_dataset=vqa2.train_dataset,
+    val_dataset=vqa2.val_dataset,
+    tokenizer=tokenizer,
+)
+
+trainer = pl.Trainer(
+    gpus=1,
+    max_epochs=30,
+    gradient_clip_val=0.25,
+    default_root_dir="logs/updown",
+)
+
+trainer.fit(lightningmodel, datamodule=vqa2)
+```
+
 ### Visual Features
 
 Available features are COCOBottomUpFeatures
@@ -55,6 +124,8 @@ for batch in dataloader:
     out = model(batch)
     # training code...
 ```
+We also provide a pytorch_lightning datamodule, available here: `multimodal.datasets.lightning.VQADataModule` and similarly for other VQA datasets.
+See documentation.
 
 ### Pretrained Tokenizer and Word embeddings
 
@@ -167,4 +238,5 @@ wemb(
 )
 
 ```
+
 

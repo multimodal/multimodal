@@ -17,7 +17,7 @@ class VQADataModule(pl.LightningDataModule):
         self,
         dir_data: str,
         min_ans_occ=8,
-        features=None,
+        features="coco-bottomup-36",
         tokenize_question=False,
         label="multilabel",
         batch_size=512,
@@ -33,7 +33,7 @@ class VQADataModule(pl.LightningDataModule):
         self.tokenize_question = tokenize_question
 
     def prepare_data(self):
-        self.dataset(
+        dset = self.dataset(
             dir_data=self.dir_data,
             split="train",
             features=self.features,
@@ -41,6 +41,7 @@ class VQADataModule(pl.LightningDataModule):
             label=self.label,
             load=False,
         )
+        self.num_ans = len(dset.answers)
 
     def setup(self):
         self.train_dataset = self.dataset(
