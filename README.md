@@ -23,6 +23,66 @@ And also word embeddings (either from scratch, or pretrained from torchtext, tha
 
 To install the library, run `pip install multimodal`. It is supported for python 3.6 and 3.7.
 
+
+### Visual Features
+
+Available features are COCOBottomUpFeatures
+
+```python
+>>> from multimodal.features import COCOBottomUpFeatures
+>>> bottomup = COCOBottomUpFeatures(features="trainval_36", dir_data="/tmp")
+>>> image_id = 13455
+>>> feats = bottomup[image_id]
+>>> print(feats.keys())
+['image_w', 'image_h', 'num_boxes', 'boxes', 'features']
+>>> print(feats["features"].shape)  # numpy array
+(36, 2048)
+```
+
+### Datasets
+
+Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
+
+```python
+# Visual Question Answering
+from multimodal.datasets import VQA, VQA2, VQACP, VQACP2
+
+dataset = VQA(split="train", features="coco-bottomup", dir_data="/tmp")
+item = dataset[0]
+
+dataloader = torch.utils.data.Dataloader(dataset, collate_fn = VQA.collate_fn)
+
+for batch in dataloader:
+    out = model(batch)
+    # training code...
+```
+We also provide a pytorch_lightning datamodule, available here: `multimodal.datasets.lightning.VQADataModule` and similarly for other VQA datasets.
+See documentation.
+
+### Pretrained Tokenizer and Word embeddings
+
+Word embeddings are implemented as pytorch modules. Thus, they are trainable if needed, but can be freezed.
+
+Pretrained embedding weights are downloaded with torchtext. The following pretrained embeddings are available: 
+    charngram.100d, fasttext.en.300d, fasttext.simple.300d, glove.42B.300d, glove.6B.100d, glove.6B.200d, glove.6B.300d, glove.6B.50d, glove.840B.300d, glove.twitter.27B.100d, glove.twitter.27B.200d, glove.twitter.27B.25d, glove.twitter.27B.50d
+
+Usage
+
+```python
+from multimodal.text import PretrainedWordEmbedding
+from multimodal.text import BasicTokenizer
+
+# tokenizer converts words to tokens, and to token_ids. Pretrained tokenizers 
+# save token_ids from an existing vocabulary.
+tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa")
+
+# Pretrained word embedding, freezed. A list of tokens as input to initialize embeddings.
+wemb = PretrainedWordEmbedding.from_pretrained("glove.840B.300d", tokens=tokenizer.tokens, freeze=True)
+
+embeddings = wemb(tokenizer(["Inputs are batched, and padded. This is the first batch item", "This is the second batch item."]))
+```
+
+
 ### Models
 
 The Bottom-Up and Top-Down Attention for VQA model is implemented. 
@@ -95,63 +155,6 @@ trainer = pl.Trainer(
 trainer.fit(lightningmodel, datamodule=vqa2)
 ```
 
-### Visual Features
-
-Available features are COCOBottomUpFeatures
-
-```python
->>> from multimodal.features import COCOBottomUpFeatures
->>> bottomup = COCOBottomUpFeatures(features="trainval_36", dir_data="/tmp")
->>> image_id = 13455
->>> feats = bottomup[image_id]
->>> print(feats.keys())
-['image_w', 'image_h', 'num_boxes', 'boxes', 'features']
->>> print(feats["features"].shape)  # numpy array
-(36, 2048)
-```
-
-### Datasets
-
-Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
-
-```python
-# Visual Question Answering
-from multimodal.datasets import VQA, VQA2, VQACP, VQACP2
-
-dataset = VQA(split="train", features="coco-bottomup", dir_data="/tmp")
-item = dataset[0]
-
-dataloader = torch.utils.data.Dataloader(dataset, collate_fn = VQA.collate_fn)
-
-for batch in dataloader:
-    out = model(batch)
-    # training code...
-```
-We also provide a pytorch_lightning datamodule, available here: `multimodal.datasets.lightning.VQADataModule` and similarly for other VQA datasets.
-See documentation.
-
-### Pretrained Tokenizer and Word embeddings
-
-Word embeddings are implemented as pytorch modules. Thus, they are trainable if needed, but can be freezed.
-
-Pretrained embedding weights are downloaded with torchtext. The following pretrained embeddings are available: 
-    charngram.100d, fasttext.en.300d, fasttext.simple.300d, glove.42B.300d, glove.6B.100d, glove.6B.200d, glove.6B.300d, glove.6B.50d, glove.840B.300d, glove.twitter.27B.100d, glove.twitter.27B.200d, glove.twitter.27B.25d, glove.twitter.27B.50d
-
-Usage
-
-```python
-from multimodal.text import PretrainedWordEmbedding
-from multimodal.text import BasicTokenizer
-
-# tokenizer converts words to tokens, and to token_ids. Pretrained tokenizers 
-# save token_ids from an existing vocabulary.
-tokenizer = BasicTokenizer.from_pretrained("pretrained-vqa")
-
-# Pretrained word embedding, freezed. A list of tokens as input to initialize embeddings.
-wemb = PretrainedWordEmbedding.from_pretrained("glove.840B.300d", tokens=tokenizer.tokens, freeze=True)
-
-embeddings = wemb(tokenizer(["Inputs are batched, and padded. This is the first batch item", "This is the second batch item."]))
-```
 
 ### API 
 
