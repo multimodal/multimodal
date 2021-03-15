@@ -1,0 +1,1 @@
+from .updown import UpDownModel

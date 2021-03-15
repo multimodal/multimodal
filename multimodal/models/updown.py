@@ -144,6 +144,14 @@ class NewAttention(nn.Module):
 
 
 class UpDownModel(nn.Module):
+    """
+    The UpDown / BUTD model (Bottom-Up and Top-Down attention) by 
+    Peter Anderson, Xiaodong He, Chris Buehler, Damien Teney, Mark Johnson, Stephen Gould, Lei Zhang.
+
+    Paper: https://arxiv.org/abs/1707.07998
+
+    The implementation was adapted from this code: https://github.com/hengyuan-hu/bottom-up-attention-vqa.
+    """
     def __init__(
         self,
         num_ans,
@@ -175,11 +183,15 @@ class UpDownModel(nn.Module):
         self.classifier = SimpleClassifier(num_hid, num_hid * 2, num_ans, 0.5)
 
     def forward(self, batch):
-        """Forward
-        v: [batch, num_objs, obj_dim]
-        b: [batch, num_objs, b_dim]
-        q: [batch_size, seq_length]
-        return: logits, not probs
+        """
+        Forward method
+
+        Args:
+            batch (dict): Dictionnary containing the keys ``features`` (B*N*D tensor) and``question_tokens`` (B*L tensor)
+                representing respectively the image and the question.
+        
+        Returns:
+            (dict) containing the key ``logits``, which has dimension ``(batch, num_ans)`` containing the unnormalized logits.
         """
         v = batch["features"]
         q = batch["question_tokens"]
@@ -193,8 +205,8 @@ class UpDownModel(nn.Module):
         logits = self.classifier(joint_repr)
         out = {
             "logits": logits,
-            "mm": joint_repr,
-            "processed_question": q_emb,
+            # "mm": joint_repr,
+            # "processed_question": q_emb,
         }
         return out
 
