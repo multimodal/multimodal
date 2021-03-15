@@ -146,6 +146,10 @@ class BasicTokenizer:
     def convert_tokens_to_ids(self, tokens):
         """
         Converts tokenized representations 
+        Args:
+            tokens (list): List of string tokens that will be converted to their token ids.
+            If a token is missing from the vocabulary, it will be converted to self.unk_token_id.
+            Padding tokens will be converted to self.pad_token_id.
         """
         if type(tokens[0]) == str:
             print(tokens)

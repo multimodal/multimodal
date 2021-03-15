@@ -23,7 +23,7 @@ as well as datasets such as VQA.
    datasets/datasets
 
 .. toctree::
-   :maxdepth: 0
+   :maxdepth: 1
    :caption: Tokenizers
 
    datasets/tokenizers
