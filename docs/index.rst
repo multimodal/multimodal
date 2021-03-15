@@ -22,10 +22,13 @@ as well as datasets such as VQA.
 
    datasets/datasets
 
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Code Documentation
+   :maxdepth: 0
+   :caption: Tokenizers
+
+   datasets/tokenizers
+
+
 
 
 This library was developped by Corentin Dancette. If you have any new feature request
