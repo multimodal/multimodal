@@ -12,8 +12,12 @@ class VQAEvalCommand:
     def add_parser(cls, subparser):
         parser: argparse.ArgumentParser = subparser.add_parser(cls.command)
         parser.add_argument("--dir_data", default=DEFAULT_DATA_DIR)
-        parser.add_argument("-p", "--predictions", help="path to predictions", required=True)
-        parser.add_argument("-s", "--split", default="train", choices=["train", "val"], required=True)
+        parser.add_argument(
+            "-p", "--predictions", help="path to predictions", required=True
+        )
+        parser.add_argument(
+            "-s", "--split", default="train", choices=["train", "val"], required=True
+        )
         parser.set_defaults(func=cls.run)
 
     @classmethod
@@ -24,6 +28,7 @@ class VQAEvalCommand:
         result = vqa2.evaluate(predictions)
         print(result)
 
+
 class VQA2EvalCommand(VQAEvalCommand):
     dataset = VQA2
     command = "vqa2-eval"
@@ -32,7 +37,6 @@ class VQA2EvalCommand(VQAEvalCommand):
 class VQACPEvalCommand(VQAEvalCommand):
     dataset = VQACP
     command = "vqacp-eval"
-
 
 
 class VQACP2EvalCommand(VQAEvalCommand):
