@@ -22,10 +22,10 @@ class VQAEvalCommand:
 
     @classmethod
     def run(cls, args):
-        vqa2 = cls.dataset(dir_data=args.dir_data, split=args.split)
+        dataset = cls.dataset(dir_data=args.dir_data, split=args.split)
         with open(args.predictions) as f:
             predictions = json.load(f)
-        result = vqa2.evaluate(predictions)
+        result = dataset.evaluate(predictions)
         print(result)
 
 
