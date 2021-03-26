@@ -87,7 +87,7 @@ class VQA(AbstractVQA):
         dir_data=None,
         features=None,
         split="train",
-        min_ans_occ=8,
+        min_ans_occ=9,
         dir_features=None,
         label="multilabel",
         tokenize_questions=False,
