@@ -48,6 +48,21 @@ Available features are COCOBottomUpFeatures
 
 Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
 
+You can run a simple evaluation of predictions using the following commands. 
+Data will be downloaded and processed if necessary. Predictions must have the same format as the official VQA result format (see https://visualqa.org/evaluation.html).
+```bash
+# vqa 1.0
+python -m multimodal vqa-eval -p <path/to/predictions> -s "val"
+# vqa 2.0
+python -m multimodal vqa2-eval -p <path/to/predictions> -s "val"
+# vqa-cp 1.0
+python -m multimodal vqacp-eval -p <path/to/predictions> -s "val"
+# vqa-cp 2.0
+python -m multimodal vqacp2-eval -p <path/to/predictions> -s "val"
+```
+
+To use the datasets for your training runs, use the following:
+
 ```python
 # Visual Question Answering
 from multimodal.datasets import VQA, VQA2, VQACP, VQACP2
