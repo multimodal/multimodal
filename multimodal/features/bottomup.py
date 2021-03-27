@@ -81,6 +81,10 @@ class COCOBottomUpFeatures:
             print("Processing file")
             self._process_file(path_download, self.featspath)
 
+    @classmethod
+    def download_and_process(cls, name, dir_data):
+        cls(feature=name, dir_data=dir_data)
+
     def download(self):
         url = self.urls[self.features_name]
         dl = SmartDL(url, self.dir_data)

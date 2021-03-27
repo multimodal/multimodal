@@ -29,11 +29,15 @@ as well as datasets such as VQA.
    source/tokenizers
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Models
 
    source/models
 
+.. toctree::
+   :maxdepth: 1
+
+   source/cli
 
 
 
