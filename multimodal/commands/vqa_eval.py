@@ -16,7 +16,7 @@ class VQAEvalCommand:
             "-p", "--predictions", help="path to predictions", required=True
         )
         parser.add_argument(
-            "-s", "--split", default="train", choices=["train", "val"], required=True
+            "-s", "--split", default="train", choices=["train", "val", "test"], required=True
         )
         parser.set_defaults(func=cls.run)
 

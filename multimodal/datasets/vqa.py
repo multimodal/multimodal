@@ -170,6 +170,10 @@ class VQA(AbstractVQA):
             # aid_to_ans
             self.ans_to_aid = {ans: i for i, ans in enumerate(self.answers)}
 
+    @classmethod
+    def download_and_process(cls, dir_data):
+        cls(dir_data=dir_data, split="train", load="False")
+
     def _load_questions(self, split):
         with open(self.path_questions[split]) as f:
             return json.load(f)["questions"]
