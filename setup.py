@@ -11,6 +11,7 @@ REQUIRED_PKGS = [
     "pySmartDL",
     "torchtext>=0.6",
     "tables",
+    "Pillow>=6"
 ]
 
 

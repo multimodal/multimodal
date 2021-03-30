@@ -23,3 +23,13 @@ class is instanciated. Note that the pre-processing can take several minutes.
     :inherited-members:
 
 
+
+
+CLEVR
+------
+
+https://cs.stanford.edu/people/jcjohns/clevr/
+
+
+.. autoclass:: multimodal.datasets.CLEVR
+    :inherited-members:
