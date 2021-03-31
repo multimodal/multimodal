@@ -78,6 +78,7 @@ class CLEVR(Dataset):
         .. code-block::
 
             {
+                "index",
                 "question",
                 "answer":,
                 "question_family_index":,
@@ -86,6 +87,14 @@ class CLEVR(Dataset):
                 "image"
                 "label",
             }
+
+        Note that you can recover the program for an example by using the index:
+
+        ... code-block:: python
+
+            index = item["index"][0]  #  first item of batch
+            program = clevr.questions[index]["program"]
+
         """
         q = self.questions[index]
         img_path = os.path.join(
@@ -99,6 +108,7 @@ class CLEVR(Dataset):
         if self.transform is not None:
             im = self.transform(im)
         item = {
+            "index": index,
             "question": q["question"],
             "answer": q["answer"],
             "question_family_index": q["question_family_index"],
