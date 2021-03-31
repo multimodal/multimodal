@@ -12,31 +12,22 @@ as well as datasets such as VQA.
 
 .. toctree::
    :maxdepth: 2
+   :caption: Datasets
+
+   source/datasets
+   source/tokenizers
+
+.. toctree::
+   :maxdepth: 2
    :caption: Visual Features
 
    source/visual_features
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Datasets
-
-   source/datasets
-
-.. toctree::
    :maxdepth: 1
-   :caption: Tokenizers
-
-   source/tokenizers
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Models
-
+   :caption: Other
+   
    source/models
-
-.. toctree::
-   :maxdepth: 1
-
    source/cli
 
 
