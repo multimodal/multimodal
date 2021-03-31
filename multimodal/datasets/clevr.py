@@ -90,7 +90,7 @@ class CLEVR(Dataset):
 
         Note that you can recover the program for an example by using the index:
 
-        ... code-block:: python
+        .. code-block:: python
 
             index = item["index"][0]  #  first item of batch
             program = clevr.questions[index]["program"]
