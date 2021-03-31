@@ -11,12 +11,16 @@ import torchvision
 import torch
 
 
-class CLEVRDataset(Dataset):
+class CLEVR(Dataset):
     """
     CLEVR: A Diagnostic Dataset for
-    Compositional Language and Elementary Visual Reasoning
+    Compositional Language and Elementary Visual Reasoning.
     
     See https://cs.stanford.edu/people/jcjohns/clevr/
+
+    Warning: instanciating this class will download a 18Gb file to the multimodal data directory
+    (by default in your applications data). You can specify 
+    the multimodal data directory by specifying the ``dir_data`` argument, or specifying it in your path.
 
     Args:
         dir_data (str): dir for the multimodal cache (data will be downloaded in a clevr/ folder inside this directory
@@ -68,6 +72,21 @@ class CLEVRDataset(Dataset):
                     json.dump(all_answers, f)
 
     def __getitem__(self, index: int):
+        """
+        Returns a dictionnary with the following keys:
+
+        .. code-block::
+
+            {
+                "question",
+                "answer":,
+                "question_family_index":,
+                "image_filename":,
+                "image_index":,
+                "image"
+                "label",
+            }
+        """
         q = self.questions[index]
         img_path = os.path.join(
             self.dir_dataset, "CLEVR_v1.0", "images", self.split, q["image_filename"]

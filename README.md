@@ -19,6 +19,8 @@ It also supports the following datasets, with their evaluation metric ([VQA eval
 
 - [CLEVR dataset](https://cs.stanford.edu/people/jcjohns/clevr/)
 
+Note that when instanciating those datasets, large data might be downloaded. You can always specify the `dir_data` argument when instanciating, or you can set the environment variable `MULTIMODAL_DATA_DIR` so that all data always goes to the specified directory.
+
 **Models**
 Bottom-Up and Top-Down attention (UpDown)
 
@@ -48,7 +50,9 @@ Available features are COCOBottomUpFeatures
 
 ### Datasets
 
-Available datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
+**VQA**
+
+Available VQA datasets are VQA, VQA v2, VQA-CP, VQA-CP v2, and their associated [pytorch-lightinng](https://pytorch-lightning.readthedocs.io/en/stable/datamodules.html) data modules.
 
 You can run a simple evaluation of predictions using the following commands. 
 Data will be downloaded and processed if necessary. Predictions must have the same format as the official VQA result format (see https://visualqa.org/evaluation.html).
@@ -80,6 +84,17 @@ for batch in dataloader:
 ```
 We also provide a pytorch_lightning datamodule, available here: `multimodal.datasets.lightning.VQADataModule` and similarly for other VQA datasets.
 See documentation.
+
+**CLEVR**
+
+```python
+from multimodal.datasets import CLEVR
+
+# Warning, this will download a 18Gb file. 
+# You can specify the multimodal data directory 
+#   by providing the dir_data argument
+clevr = CLEVR(split="train") 
+```
 
 ### Pretrained Tokenizer and Word embeddings
 

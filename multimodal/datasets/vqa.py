@@ -312,19 +312,24 @@ class VQA(AbstractVQA):
 
     def __getitem__(self, index):
         """
-        Returns a dictionnary with the following keys : {
-            'image_id', 
-            'question_id',
-            'question', 
-            'answer_type',
-            'multiple_choice_answer',
-            'answers',
-            'image_id',
-            'question_type',
-            'question_id',
-            'scores',
-            'label'   # ground truth label to be used for the loss
-        }
+        Returns a dictionnary with the following keys 
+
+        .. code-block::
+
+            {
+                'image_id', 
+                'question_id',
+                'question', 
+                'answer_type',
+                'multiple_choice_answer',
+                'answers',
+                'image_id',
+                'question_type',
+                'question_id',
+                'scores',
+                'label'   # ground truth label to be used for the loss
+            }
+
         Aditionnaly, if visual features are used, keys from the features will be added.
         """
         item = {"index": index}
