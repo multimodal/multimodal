@@ -17,6 +17,8 @@ It also supports the following datasets, with their evaluation metric ([VQA eval
 - VQA-CP v1
 - VQA-CP v2
 
+- [CLEVR dataset](https://cs.stanford.edu/people/jcjohns/clevr/)
+
 **Models**
 Bottom-Up and Top-Down attention (UpDown)
 
