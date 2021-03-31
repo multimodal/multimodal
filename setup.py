@@ -18,7 +18,7 @@ REQUIRED_PKGS = [
 
 setuptools.setup(
     name="multimodal",  # Replace with your own username
-    version="0.0.6",
+    version="0.0.7",
     author="Corentin Dancette",
     author_email="corentin@cdancette.fr",
     description="A collection of multimodal datasets multimodal for research.",
