@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/multimodal.svg)](https://pypi.python.org/pypi/multimodal/)
 [![Documentation Status](https://readthedocs.org/projects/multimodal/badge/?version=latest)](https://multimodal.readthedocs.io/en/latest/?badge=latest) [![Downloads](https://pepy.tech/badge/multimodal/week)](https://pepy.tech/project/multimodal) 
-[![Gitter chat](https://badges.gitter.im/multimodal-learning.png)](https://gitter.im/multimodal-learning/multimodal)
+[![Gitter chat](https://badges.gitter.im/multimodal-learning.png)](https://gitter.im/multimodal-learning/multimodal) [![Join the chat at https://gitter.im/multimodal-learning/multimodal](https://badges.gitter.im/multimodal-learning/multimodal.svg)](https://gitter.im/multimodal-learning/multimodal?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 A collection of multimodal (vision and language) datasets and visual features for deep learning research. See the [Documentation](https://multimodal.readthedocs.io/en/latest/).
 
