@@ -115,7 +115,7 @@ class VQA(AbstractVQA):
             for split in self.filename_questions.keys()
         }  # vqa2/train/
 
-        self.dir_splits["test-dev"] = "test"  # same directory
+        self.dir_splits["test-dev"] = self.dir_splits["test"]  # same directory
 
         for s in self.dir_splits:
             os.makedirs(self.dir_splits[s], exist_ok=True)
