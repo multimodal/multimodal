@@ -118,3 +118,6 @@ class CLEVR(Dataset):
             "label": torch.tensor(ans_id),
         }
         return item
+
+    def __len__(self) -> int:
+        return len(self.questions)
