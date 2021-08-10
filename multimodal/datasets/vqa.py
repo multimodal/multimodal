@@ -1,4 +1,5 @@
 # stdlib
+import itertools
 from multimodal.text.wordembedding import get_dim_from_name
 import os
 import json
@@ -18,7 +19,7 @@ from torchtext.data.utils import get_tokenizer
 from multimodal.features import get_features
 from multimodal.datasets import vqa_utils
 from multimodal import DEFAULT_DATA_DIR
-from multimodal.utils import download_and_unzip
+from multimodal.utils import download_and_unzip, download_file
 from multimodal.datasets.vqa_utils import EvalAIAnswerProcessor
 
 
@@ -57,6 +58,8 @@ class VQA(AbstractVQA):
     """
 
     SPLITS = ["train", "val", "test", "test-dev"]
+
+    UNZIP = True
 
     name = "vqa"
 
@@ -210,12 +213,15 @@ class VQA(AbstractVQA):
         and precompute VQA score for faster evaluation.
         This follows the official VQA evaluation tool.
         """
-        path_train = self.path_annotations_processed["train"]
-        path_val = self.path_annotations_processed["val"]
-        if not os.path.exists(path_train) or not os.path.exists(path_val):
-            annotations_train = self._load_original_annotations("train")
-            annotations_val = self._load_original_annotations("val")
-            all_annotations = annotations_train + annotations_val
+        paths = [self.path_annotations_processed[split] for split in self.url_annotations]
+        # path_train = self.path_annotations_processed["train"]
+        # path_val = self.path_annotations_processed["val"]
+        if any(not os.path.exists(p) for p in paths):
+            annotations = [self._load_original_annotations(split) for split in self.url_annotations]
+            all_annotations = list(itertools.chain(*annotations))
+            # annotations_train = self._load_original_annotations("train")
+            # annotations_val = self._load_original_annotations("val")
+            # all_annotations = annotations_train + annotations_val
 
             print("Processing annotations")
             processor = EvalAIAnswerProcessor()
@@ -245,12 +251,12 @@ class VQA(AbstractVQA):
                         scores.append(score)
                     annot["scores"][ans] = mean(scores)
                 qid_to_scores[annot["question_id"]] = annot["scores"]
-            print(f"Saving processed annotations at {path_train} and {path_val}")
 
-            with open(self.path_annotations_processed["train"], "w") as f:
-                json.dump(annotations_train, f)
-            with open(self.path_annotations_processed["val"], "w") as f:
-                json.dump(annotations_val, f)
+            for i, split in enumerate(self.url_annotations):
+                print(f"Saving processed annotations for split {split} at path {self.path_annotations_processed[split]}")
+                with open(self.path_annotations_processed[split], "w") as f:
+                    json.dump(annotations[i], f)
+
             with open(os.path.join(self.dir_dataset, "qid_to_scores.json"), "w") as f:
                 json.dump(qid_to_scores, f)
 
@@ -259,10 +265,8 @@ class VQA(AbstractVQA):
         #####################################
         if not os.path.exists(self.path_answers):
             print(f"Removing uncommon answers")
-            annotations_train = self._load_processed_annotations("train")
-            annotations_val = self._load_processed_annotations("val")
-            all_annotations = annotations_train + annotations_val
-
+            annotations = [self._load_processed_annotations(split) for split in self.url_annotations]
+            all_annotations = itertools.chain(*annotations)
             occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
             self.answers = [ans for ans in occ if occ[ans] >= self.min_ans_occ]
             print(
@@ -294,7 +298,10 @@ class VQA(AbstractVQA):
             path_questions = self.path_questions[split]
             if not os.path.exists(path_questions):
                 print(f"Downloading questions at {url_questions} to {directory}")
-                download_and_unzip(url_questions, directory=directory)
+                if self.UNZIP:
+                    download_and_unzip(url_questions, directory=directory)
+                else:
+                    download_file(url_questions, directory=directory)
 
         for split in self.url_annotations.keys():
             url_annotations = self.url_annotations[split]
@@ -302,7 +309,10 @@ class VQA(AbstractVQA):
             path_annotations = self.path_original_annotations[split]
             if not os.path.exists(path_annotations):
                 print(f"Downloading annotations {url_annotations} to {directory}")
-                download_and_unzip(url_annotations, directory=directory)
+                if self.UNZIP:
+                    download_and_unzip(url_annotations, directory=directory)
+                else:
+                    download_file(url_annotations, directory=directory)
 
     def __len__(self):
         """
@@ -468,6 +478,7 @@ class VQACP(VQA):
     """
 
     DOWNLOAD_SPLITS = ["train", "test"]
+    UNZIP = False
 
     name = "vqacp"
 
@@ -481,25 +492,39 @@ class VQACP(VQA):
         "test": "https://computing.ece.vt.edu/~aish/vqacp/vqacp_v1_test_annotations.json",
     }
 
-    def load_features(self):
-        self.feats = get_features(
-            self.features, split="trainval", dir_data=self.dir_features,
-        )
+    filename_questions = {
+        "train": "vqacp_v1_train_questions.json",
+        "test": "vqacp_v1_test_questions.json",
+    }
 
-    def load_original_annotations(self):
-        print("Loading annotations")
-        with open(self.path_original_annotations) as f:
-            self.annotations = json.load(f)
+    filename_annotations = {
+        "train": "vqacp_v1_train_annotations.json",
+        "test": "vqacp_v1_test_annotations.json",
+    }
 
-    def load(self):
+
+    def _load_questions(self, split):
+        with open(self.path_questions[split]) as f:
+            return json.load(f)
+
+    def _load_original_annotations(self, split):
+        with open(self.path_original_annotations[split]) as f:
+            return json.load(f)
+
+
+    def _load(self):
         print("Loading questions")
-        with open(self.path_questions) as f:
+        with open(self.path_questions[self.split]) as f:
             self.questions = json.load(f)
 
-        print("Loading processed annotations")
-        with open(self.path_annotations_processed) as f:
-            self.annotations = json.load(f)
+        print("Loading annotations")
+        if self.has_annotations:
+            with open(self.path_annotations_processed[self.split]) as f:
+                self.annotations = json.load(f)
 
+        print(f"Loading aid_to_ans")
+        with open(self.path_answers) as f:
+            self.answers = json.load(f)
 
 class VQACP2(VQACP):
     """  Pytorch Dataset implementation for the VQA-CP v2 dataset (visual question answering). 
@@ -535,3 +560,12 @@ class VQACP2(VQACP):
         "test": "https://computing.ece.vt.edu/~aish/vqacp/vqacp_v2_test_annotations.json",
     }
 
+    filename_questions = {
+        "train": "vqacp_v2_train_questions.json",
+        "test": "vqacp_v2_test_questions.json",
+    }
+
+    filename_annotations = {
+        "train": "vqacp_v2_train_annotations.json",
+        "test": "vqacp_v2_test_annotations.json",
+    }
