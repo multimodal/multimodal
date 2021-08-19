@@ -7,11 +7,13 @@
 A collection of multimodal (vision and language) datasets and visual features for deep learning research. See the [Documentation](https://multimodal.readthedocs.io/en/latest/).
 
 **Visual Features**
+
 Currently it supports the following visual features (downloaded automatically): 
 - COCO [Bottom-Up Top-Down](https://github.com/peteanderson80/bottom-up-attention) features (10-100)
 - COCO [Bottom-Up Top-Down](https://github.com/peteanderson80/bottom-up-attention) features (36)
 
 **Datasets**
+
 It also supports the following datasets, with their evaluation metric ([VQA evaluation metric](https://visualqa.org/evaluation.html)) 
 - VQA v1
 - VQA v2
@@ -23,9 +25,11 @@ It also supports the following datasets, with their evaluation metric ([VQA eval
 Note that when instanciating those datasets, large data might be downloaded. You can always specify the `dir_data` argument when instanciating, or you can set the environment variable `MULTIMODAL_DATA_DIR` so that all data always goes to the specified directory.
 
 **Models**
+
 Bottom-Up and Top-Down attention (UpDown)
 
 **WordEmbeddings**
+
 And also word embeddings (either from scratch, or pretrained from torchtext, that can be fine-tuned).
 
 
