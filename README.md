@@ -19,6 +19,7 @@ It also supports the following datasets, with their evaluation metric ([VQA eval
 - VQA v2
 - VQA-CP v1
 - VQA-CP v2
+- AdVQA [https://adversarialvqa.github.io](https://adversarialvqa.github.io)
 
 - [CLEVR dataset](https://cs.stanford.edu/people/jcjohns/clevr/)
 

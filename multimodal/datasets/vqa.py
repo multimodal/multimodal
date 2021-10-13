@@ -228,10 +228,10 @@ class VQA(AbstractVQA):
 
             print("\tPre-Processing answer punctuation")
             for annot in tqdm(all_annotations):
-
-                annot["multiple_choice_answer"] = processor(
-                    annot["multiple_choice_answer"]
-                )
+                if "multiple_choice_answer" in annot:
+                    annot["multiple_choice_answer"] = processor(
+                        annot["multiple_choice_answer"]
+                    )
                 # vqa_utils.processPunctuation(
                 #     annot["multiple_choice_answer"]
                 # )
@@ -263,18 +263,21 @@ class VQA(AbstractVQA):
         #####################################
         # Processing min occurences of answer
         #####################################
-        if not os.path.exists(self.path_answers):
-            print(f"Removing uncommon answers")
-            annotations = [self._load_processed_annotations(split) for split in self.url_annotations]
-            all_annotations = itertools.chain(*annotations)
-            occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
-            self.answers = [ans for ans in occ if occ[ans] >= self.min_ans_occ]
-            print(
-                f"Num answers after keeping occ >= {self.min_ans_occ}: {len(self.answers)}."
-            )
-            print(f"Saving answers at {self.path_answers}")
-            with open(self.path_answers, "w") as f:
-                json.dump(self.answers, f)
+        annotations = [self._load_processed_annotations(split) for split in self.url_annotations]
+        all_annotations = itertools.chain(*annotations)
+        if "multiple_choice_answer" in annotations[0][0]:
+            if not os.path.exists(self.path_answers):
+                print(f"Removing uncommon answers")
+                occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
+                self.answers = [ans for ans in occ if occ[ans] >= self.min_ans_occ]
+                print(
+                    f"Num answers after keeping occ >= {self.min_ans_occ}: {len(self.answers)}."
+                )
+                print(f"Saving answers at {self.path_answers}")
+        else:
+            self.answers = list(set(ans["answer"] for a in all_annotations for ans in a["answers"]))
+        with open(self.path_answers, "w") as f:
+            json.dump(self.answers, f)
 
     def _load(self):
         print("Loading questions")
@@ -568,4 +571,25 @@ class VQACP2(VQACP):
     filename_annotations = {
         "train": "vqacp_v2_train_annotations.json",
         "test": "vqacp_v2_test_annotations.json",
+    }
+
+class AdVQA(VQA):
+    UNZIP = False
+    name = "AdVQA"
+
+    url_questions = {
+        "val": "https://dl.fbaipublicfiles.com/advqa/v1_OpenEnded_mscoco_val2017_advqa_questions.json",
+        "test": "https://dl.fbaipublicfiles.com/advqa/v1_OpenEnded_mscoco_testdev2015_advqa_questions.json",
+    }
+
+    url_annotations = {
+        "val": "https://dl.fbaipublicfiles.com/advqa/v1_mscoco_val2017_advqa_annotations.json",
+    }
+
+    filename_questions = {
+        "val": "v1_OpenEnded_mscoco_val2017_advqa_questions.json",
+        "test": "v1_OpenEnded_mscoco_testdev2015_advqa_questions.json",
+    }
+    filename_annotations = {
+        "val": "v1_mscoco_val2017_advqa_annotations.json",
     }
