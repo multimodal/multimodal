@@ -263,9 +263,9 @@ class VQA(AbstractVQA):
         #####################################
         # Processing min occurences of answer
         #####################################
+        annotations = [self._load_processed_annotations(split) for split in self.url_annotations]
+        all_annotations = itertools.chain(*annotations)
         if not os.path.exists(self.path_answers):
-            annotations = [self._load_processed_annotations(split) for split in self.url_annotations]
-            all_annotations = itertools.chain(*annotations)
             if "multiple_choice_answer" in annotations[0][0]:
                 print(f"Removing uncommon answers")
                 occ = Counter(annot["multiple_choice_answer"] for annot in all_annotations)
