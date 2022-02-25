@@ -13,12 +13,13 @@ REQUIRED_PKGS = [
     "tables",
     "Pillow>=6",
     "torchvision",
+    "h5py",
 ]
 
 
 setuptools.setup(
     name="multimodal",  # Replace with your own username
-    version="0.0.12",
+    version="0.0.13",
     author="Corentin Dancette",
     author_email="corentin@cdancette.fr",
     description="A collection of multimodal datasets multimodal for research.",
