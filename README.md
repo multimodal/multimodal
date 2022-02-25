@@ -6,6 +6,16 @@
 
 A collection of multimodal (vision and language) datasets and visual features for deep learning research. See the [Documentation](https://multimodal.readthedocs.io/en/latest/).
 
+**Pretrained models**
+
+- ALBEF
+
+```python
+from multimodal.models import ALBEF
+albef = ALBEF.from_pretrained()
+```
+
+
 **Visual Features**
 
 Currently it supports the following visual features (downloaded automatically): 
@@ -27,7 +37,9 @@ Note that when instanciating those datasets, large data might be downloaded. You
 
 **Models**
 
-Bottom-Up and Top-Down attention (UpDown)
+- Bottom-Up and Top-Down attention (UpDown)
+- ALBEF (pretrained model)
+
 
 **WordEmbeddings**
 

@@ -1,12 +1,12 @@
 # stdlib
 import itertools
-from multimodal.text.wordembedding import get_dim_from_name
 import os
 import json
 from itertools import combinations
 from statistics import mean
 from collections import Counter
 from typing import List
+import pickle
 
 # librairies
 from tqdm import tqdm
@@ -274,10 +274,14 @@ class VQA(AbstractVQA):
                     f"Num answers after keeping occ >= {self.min_ans_occ}: {len(self.answers)}."
                 )
                 print(f"Saving answers at {self.path_answers}")
+            else:
+                self.answers = list(set(ans["answer"] for a in all_annotations for ans in a["answers"]))
+            
+            with open(self.path_answers, "w") as f:
+                json.dump(self.answers, f)
         else:
-            self.answers = list(set(ans["answer"] for a in all_annotations for ans in a["answers"]))
-        with open(self.path_answers, "w") as f:
-            json.dump(self.answers, f)
+            with open(self.path_answers) as f:
+                self.answers = json.load(f)
 
     def _load(self):
         print("Loading questions")
